@@ -96,8 +96,8 @@ code{background:var(--surface-2); padding:1px 5px; border-radius:4px; font-size:
   <div id="app"></div>
 </div>
 <div class="actions">
-  <button id="btnFiche">Fiche technique (.docx)</button>
-  <button id="btnDevis" class="primary">Devis client (.docx)</button>
+  <button id="btnFiche" disabled>Chargement…</button>
+  <button id="btnDevis" class="primary" disabled>Chargement…</button>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/docx@9.7.1/dist/index.umd.cjs"></script>
@@ -647,7 +647,7 @@ function setByPath(obj,path,value){
 /* ---------- Word export (100% local, pas d'internet requis après le premier chargement de la librairie) ---------- */
 
 function ensureDocx(){
-  if(!window.docx){ alert("La librairie Word n'a pas fini de charger, réessaie dans un instant."); return null; }
+  if(!window.docx){ alert("La librairie Word n'a pas pu se charger (connexion internet ?). Recharge la page et réessaie."); return null; }
   return window.docx;
 }
 function para(text,opts){
@@ -773,6 +773,19 @@ document.getElementById('btnFiche').addEventListener('click',function(){ exportD
 document.getElementById('btnReset').addEventListener('click', resetForm);
 
 render();
+
+// Active les boutons d'export seulement une fois la librairie Word chargée,
+// pour éviter le message "n'a pas fini de charger" au premier clic.
+(function waitForDocx(){
+  if(window.docx){
+    document.getElementById('btnDevis').disabled=false;
+    document.getElementById('btnDevis').textContent='Devis client (.docx)';
+    document.getElementById('btnFiche').disabled=false;
+    document.getElementById('btnFiche').textContent='Fiche technique (.docx)';
+  } else {
+    setTimeout(waitForDocx, 200);
+  }
+})();
 })();
 </script>
 </body>
