@@ -1,0 +1,779 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Devis carrelage &amp; fiche chantier</title>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#1E2226; --ink-soft:#4B4E48;
+  --surface-0:#EDEBE3; --surface-1:#FFFFFF; --surface-2:#F6F4EE;
+  --line:#DAD6C9; --line-strong:#C3BEAF;
+  --accent:#D8550A; --accent-ink:#FFF6EE;
+  --success:#2F6B3A; --warn:#8C5E08; --danger:#B4302B;
+  --font-head:'Archivo', Georgia, serif;
+  --font-body:'Inter', system-ui, -apple-system, sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --ink:#EDEAE2; --ink-soft:#B7B3A6;
+    --surface-0:#17181A; --surface-1:#1F2123; --surface-2:#26282A;
+    --line:#3A3B38; --line-strong:#4C4D49;
+    --accent:#FF7A33; --accent-ink:#241000;
+    --success:#8FCB94; --warn:#E3B564; --danger:#F0918C;
+  }
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{background:var(--surface-0); color:var(--ink); font-family:var(--font-body); font-size:15px; line-height:1.5;}
+h1,h2{font-family:var(--font-head); font-weight:700; margin:0; color:var(--ink);}
+.wrap{max-width:720px;margin:0 auto;padding:0 16px 120px;}
+header.top{position:sticky; top:0; z-index:5; background:var(--surface-0); border-bottom:1px solid var(--line); padding:18px 16px 14px;}
+header.top h1{font-size:20px; letter-spacing:-0.01em;}
+header.top p{margin:4px 0 0; color:var(--ink-soft); font-size:13px;}
+.reset-link{margin-top:8px; padding:0; border:none; background:none; color:var(--ink-soft); font-family:var(--font-body); font-size:12px; text-decoration:underline; cursor:pointer;}
+.reset-link:hover{color:var(--accent);}
+section.card{background:var(--surface-1); border:1px solid var(--line); border-radius:14px; margin-top:16px; overflow:hidden;}
+.card-head{display:flex; align-items:center; gap:10px; padding:14px 16px; border-bottom:1px solid var(--line); cursor:pointer; -webkit-tap-highlight-color:transparent;}
+.card-head .btn-del{margin-left:auto; white-space:nowrap;}
+.card-head .chevron{color:var(--ink-soft); font-size:11px; flex:none;}
+.cat-summary{display:block; font-size:12px; color:var(--ink-soft); font-weight:400; margin-top:2px;}
+.add-cat-card{border-style:dashed; background:transparent;}
+.subhead{font-family:var(--font-head); font-size:14px; margin:18px 0 8px; padding-top:14px; border-top:1px solid var(--line);}
+.subhead:first-of-type{border-top:none; padding-top:0; margin-top:0;}
+.tarif-table{width:100%; border-collapse:collapse; margin:10px 0;}
+.tarif-table th{font-size:11px; color:var(--ink-soft); text-align:left; font-weight:500; padding:4px 4px;}
+.tarif-table td{padding:3px 4px;}
+.tarif-table input{width:100%; padding:6px 7px; border:1px solid var(--line-strong); border-radius:6px; background:var(--surface-2); color:var(--ink); font-size:13px;}
+.tarif-table td:last-child{width:28px;}
+code{background:var(--surface-2); padding:1px 5px; border-radius:4px; font-size:11px;}
+.card-head .idx{font-family:var(--font-head); font-weight:700; font-size:13px; color:var(--accent-ink); background:var(--accent); width:22px;height:22px;border-radius:6px; display:flex;align-items:center;justify-content:center;flex:none;}
+.card-head h2{font-size:16px;}
+.card-body{padding:12px 16px 16px;}
+.field{margin-bottom:10px;}
+.field label{display:block; font-size:12px; color:var(--ink-soft); margin-bottom:4px;}
+.field input, .field select, .field textarea{width:100%; padding:11px 10px; border:1px solid var(--line-strong); border-radius:8px; background:var(--surface-2); color:var(--ink); font-family:var(--font-body); font-size:16px;}
+.field textarea{resize:vertical; min-height:52px;}
+.grid2{display:grid; grid-template-columns:repeat(auto-fit,minmax(130px,1fr)); gap:10px;}
+.item{border:1px solid var(--line); border-radius:10px; padding:10px 10px 6px; margin-bottom:10px; background:var(--surface-2);}
+.item-hidden{opacity:0.6; border-style:dashed;}
+.vis-check{display:flex; align-items:center; gap:6px; font-size:12px; color:var(--ink-soft); margin:2px 0 8px; cursor:pointer;}
+.vis-check input{width:auto;}
+.vis-badge{color:var(--warn); font-size:11px;}
+.vis-toggle-row{display:flex; gap:8px; align-items:center; font-size:12px; color:var(--ink-soft); margin-bottom:10px;}
+.link-btn{background:none; border:none; padding:0; color:var(--ink-soft); text-decoration:underline; font-size:12px; cursor:pointer; font-family:var(--font-body);}
+.link-btn:hover{color:var(--accent);}
+.item-row{display:grid; grid-template-columns:repeat(auto-fit,minmax(84px,1fr)); gap:8px;}
+.item-row .field{margin-bottom:8px;}
+.dispo-field{margin-top:2px;}
+.dispo-field label{color:var(--warn);}
+.item-foot{display:flex; justify-content:space-between; align-items:center; margin-top:2px;}
+.line-total{font-size:13px; color:var(--ink-soft);}
+.btn-del{background:none; border:none; color:var(--danger); font-size:12px; padding:8px 4px; cursor:pointer; font-family:var(--font-body);}
+.btn-add{width:100%; padding:10px; border-radius:8px; border:1px dashed var(--line-strong); background:transparent; color:var(--ink-soft); font-size:13px; cursor:pointer; font-family:var(--font-body);}
+.btn-add:hover{border-color:var(--accent); color:var(--accent);}
+.cat-total{display:flex; justify-content:space-between; margin-top:10px; padding-top:10px; border-top:1px solid var(--line); font-size:13px; color:var(--ink-soft);}
+.cat-total b{color:var(--ink); font-weight:600;}
+.totaux{padding:14px 16px 16px;}
+.totrow{display:flex; justify-content:space-between; padding:6px 0; font-size:14px;}
+.totrow.final{border-top:1px solid var(--line); margin-top:6px; padding-top:12px; font-size:18px; font-family:var(--font-head); font-weight:700;}
+.actions{position:fixed; left:0; right:0; bottom:0; z-index:6; padding:10px 16px; background:var(--surface-0); border-top:1px solid var(--line); display:flex; gap:8px;}
+.actions button{flex:1; padding:13px 8px; border-radius:9px; border:1px solid var(--line-strong); background:var(--surface-1); color:var(--ink); font-family:var(--font-body); font-weight:600; font-size:13px; cursor:pointer;}
+.actions button.primary{background:var(--accent); border-color:var(--accent); color:var(--accent-ink);}
+.actions button:disabled{opacity:0.5;}
+.hint{font-size:11px; color:var(--ink-soft); margin-top:8px; line-height:1.5;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <h1>Devis carrelage &amp; fiche chantier</h1>
+    <p>Remplis, exporte le devis client et la fiche technique pour l'exécutant.</p>
+    <button id="btnReset" class="reset-link">Nouveau devis (vider le formulaire)</button>
+  </header>
+  <div id="app"></div>
+</div>
+<div class="actions">
+  <button id="btnFiche">Fiche technique (.docx)</button>
+  <button id="btnDevis" class="primary">Devis client (.docx)</button>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/docx@9.7.1/dist/index.umd.cjs"></script>
+<script>
+(function(){
+"use strict";
+
+var defaultState = {
+  meta:{numero:'',dateDevis:'',zoneId:'',entreprise:{nom:'',tel:'',adresse:''},client:{nom:'',tel:'',adresseChantier:''}},
+  dateChantierPrevue:'', accesConsignes:'',
+  categories:[
+    {id:'metre',nom:'Métré et visite technique',open:true,items:[
+      {desc:'Visite technique et relevé des mesures',qte:1,unite:'forfait',prix:0,dispo:'À planifier avec le client',visible:true}
+    ]},
+    {id:'materiaux',nom:'Matériaux',open:false,items:[
+      {desc:'Carrelage',qte:0,unite:'m²',prix:0,dispo:'',visible:true},
+      {desc:'Colle à carrelage',qte:0,unite:'sac',prix:0,dispo:'',visible:true},
+      {desc:'Croisillons / entretoises',qte:0,unite:'boîte',prix:0,dispo:'',visible:true},
+      {desc:'Joint de carrelage',qte:0,unite:'sac',prix:0,dispo:'',visible:true},
+      {desc:"Primaire d'accrochage",qte:0,unite:'L',prix:0,dispo:'',visible:true},
+      {desc:'Plinthes / profilés de finition',qte:0,unite:'ml',prix:0,dispo:'',visible:true}
+    ]},
+    {id:'pose',nom:'Pose et découpe',open:false,items:[
+      {desc:'Préparation du support (ragréage)',qte:0,unite:'m²',prix:0,dispo:'',visible:true},
+      {desc:'Pose du carrelage',qte:0,unite:'m²',prix:0,dispo:'',visible:true},
+      {desc:'Découpes techniques (angles, tuyaux, prises)',qte:1,unite:'forfait',prix:0,dispo:'',visible:true},
+      {desc:'Jointoiement',qte:0,unite:'m²',prix:0,dispo:'',visible:true}
+    ]},
+    {id:'annexes',nom:'Travaux annexes',open:false,items:[
+      {desc:"Dépose de l'ancien revêtement",qte:0,unite:'m²',prix:0,dispo:'',visible:true},
+      {desc:'Cloison / doublage gyproc',qte:0,unite:'m²',prix:0,dispo:'',visible:true},
+      {desc:'Peinture de finition',qte:0,unite:'m²',prix:0,dispo:'',visible:true}
+    ]},
+    {id:'logistique',nom:'Logistique',open:false,items:[
+      {desc:'Déplacement / trajet',qte:1,unite:'forfait',prix:0,dispo:'',visible:true},
+      {desc:'Évacuation des gravats',qte:1,unite:'forfait',prix:0,dispo:'',visible:true},
+      {desc:'Protection du chantier (bâchage)',qte:1,unite:'forfait',prix:0,dispo:'',visible:true}
+    ]}
+  ],
+  finalisation:{tva:21,delaiExecution:'',validiteJours:30,acomptePct:30,garantie:'Assurance RC professionnelle et garantie décennale.',ajustements:[]}
+};
+
+var state = JSON.parse(JSON.stringify(defaultState));
+var newCatDraft = '';
+var settingsOpen = false;
+var openEntreprise = true, openClient = true, openCouts = false;
+function uid(){ return Math.random().toString(36).slice(2,9); }
+
+var CAT_KEY='devis-carrelage-catalogue-v1', ZONE_KEY='devis-carrelage-zones-v1';
+var defaultCatalogue=[
+  {id:'c1',desc:'Carrelage grès cérame standard',unite:'m²',prix:25},
+  {id:'c2',desc:'Colle à carrelage (sac 25 kg)',unite:'sac',prix:18},
+  {id:'c3',desc:'Joint de carrelage (sac 5 kg)',unite:'sac',prix:12},
+  {id:'c4',desc:"Primaire d'accrochage (5 L)",unite:'L',prix:9},
+  {id:'c5',desc:'Pose carrelage — petit format (≤ 30×30 cm)',unite:'m²',prix:35},
+  {id:'c6',desc:'Pose carrelage — format moyen (30×60 cm)',unite:'m²',prix:30},
+  {id:'c7',desc:'Pose carrelage — grand format (> 60 cm)',unite:'m²',prix:40},
+  {id:'c8',desc:'Ragréage / préparation du support',unite:'m²',prix:12},
+  {id:'c9',desc:'Découpes techniques complexes',unite:'forfait',prix:80}
+];
+var defaultZones=[
+  {id:'z1',nom:'Zone 1 — proche (< 20 km)',majorationPct:0,forfaitTrajet:40},
+  {id:'z2',nom:'Zone 2 — intermédiaire (20-50 km)',majorationPct:10,forfaitTrajet:80},
+  {id:'z3',nom:'Zone 3 — éloignée (> 50 km)',majorationPct:20,forfaitTrajet:150}
+];
+function loadJSON(key,fallback){
+  try{ var raw=localStorage.getItem(key); if(raw) return JSON.parse(raw); }catch(e){}
+  return JSON.parse(JSON.stringify(fallback));
+}
+function saveJSON(key,val){ try{ localStorage.setItem(key, JSON.stringify(val)); }catch(e){ console.warn('sauvegarde réglages impossible', e); } }
+var catalogue = loadJSON(CAT_KEY, defaultCatalogue);
+var zones = loadJSON(ZONE_KEY, defaultZones);
+
+
+// Rien n'est enregistré : chaque devis est généré puis exporté en .docx.
+// Le formulaire ne garde les données qu'en mémoire le temps de la saisie.
+function queueSave(){ /* pas de persistance nécessaire */ }
+
+function resetForm(){
+  if(!confirm('Vider le formulaire pour démarrer un nouveau devis ?')) return;
+  state = JSON.parse(JSON.stringify(defaultState));
+  render();
+}
+
+function eur(n){ n=Number(n)||0; return n.toLocaleString('fr-BE',{style:'currency',currency:'EUR'}); }
+function catTotal(cat){ return cat.items.reduce(function(s,it){ if(it.visible===false) return s; return s+(Number(it.qte)||0)*(Number(it.prix)||0); },0); }
+function currentZone(){ return zones.filter(function(z){return z.id===state.meta.zoneId;})[0]||null; }
+function laborMajoration(){
+  var zone=currentZone();
+  if(!zone || !zone.majorationPct) return 0;
+  var poseCat=state.categories.filter(function(c){return c.id==='pose';})[0];
+  if(!poseCat) return 0;
+  return catTotal(poseCat)*(Number(zone.majorationPct)||0)/100;
+}
+function totalHT(){ return state.categories.reduce(function(s,c){return s+catTotal(c);},0) + laborMajoration(); }
+function ajustementsMontant(baseline){
+  return (state.finalisation.ajustements||[]).reduce(function(s,a){
+    var amt = a.mode==='pct' ? baseline*(Number(a.valeur)||0)/100 : (Number(a.valeur)||0);
+    return s + (a.sens==='remise' ? -amt : amt);
+  },0);
+}
+function totalApresAjustements(){ var base=totalHT(); return base+ajustementsMontant(base); }
+function applyZoneTrajet(){
+  var zone=currentZone(); if(!zone) return;
+  var logCat=state.categories.filter(function(c){return c.id==='logistique';})[0];
+  if(logCat && logCat.items.length){ logCat.items[0].prix = Number(zone.forfaitTrajet)||0; }
+}
+
+function render(){
+  var app=document.getElementById('app'); var html='';
+
+  // Préserve la position de défilement et le focus/curseur en cours,
+  // car tout le formulaire est reconstruit à chaque interaction.
+  var prevScrollY = window.scrollY;
+  var activeEl = document.activeElement;
+  var activeId = (activeEl && activeEl.id) ? activeEl.id : null;
+  var selStart = null, selEnd = null;
+  var selectableTypes = ['text','search','tel','url','password'];
+  try{
+    if(activeId && (activeEl.tagName==='TEXTAREA' || (activeEl.tagName==='INPUT' && selectableTypes.indexOf(activeEl.type)>=0))){
+      selStart = activeEl.selectionStart; selEnd = activeEl.selectionEnd;
+    }
+  }catch(e){ selStart=null; selEnd=null; }
+
+  html+=settingsSectionHtml();
+
+  html+='<section class="card"><div class="card-head" data-action="togglesection" data-section="entreprise"><h2 style="flex:1">Entreprise &amp; devis</h2><span class="chevron">'+(openEntreprise?'▲':'▼')+'</span></div>';
+  if(openEntreprise){
+    html+='<div class="card-body">';
+    html+=field('meta.numero','Numéro de devis','text',state.meta.numero,'ex. 2026-014');
+    html+='<div class="grid2">'+field('meta.dateDevis','Date','date',state.meta.dateDevis)+field('dateChantierPrevue','Date de chantier prévue','date',state.dateChantierPrevue)+'</div>';
+    html+=field('meta.entreprise.nom',"Nom de l'entreprise / artisan",'text',state.meta.entreprise.nom);
+    html+='<div class="grid2">'+field('meta.entreprise.tel','Téléphone','tel',state.meta.entreprise.tel)+field('meta.entreprise.adresse','Adresse entreprise','text',state.meta.entreprise.adresse)+'</div>';
+    html+='</div>';
+  }
+  html+='</section>';
+
+  html+='<section class="card"><div class="card-head" data-action="togglesection" data-section="client"><h2 style="flex:1">Client &amp; chantier</h2><span class="chevron">'+(openClient?'▲':'▼')+'</span></div>';
+  if(openClient){
+    html+='<div class="card-body">';
+    html+=field('meta.client.nom','Nom du client','text',state.meta.client.nom);
+    html+=field('meta.client.tel','Téléphone client','tel',state.meta.client.tel);
+    html+=field('meta.client.adresseChantier','Adresse du chantier','text',state.meta.client.adresseChantier);
+    html+='<div class="field"><label for="zoneSelect">Zone tarifaire du chantier</label><select id="zoneSelect"><option value="">— Aucune / tarif standard —</option>'
+        +zones.map(function(z){return '<option value="'+z.id+'"'+(state.meta.zoneId===z.id?' selected':'')+'>'+escapeHtml(z.nom)+'</option>';}).join('')
+        +'</select></div>';
+    html+=field('accesConsignes',"Accès / consignes pour l'exécutant",'textarea',state.accesConsignes,'clés, étage, stationnement, animaux...');
+    html+='</div>';
+  }
+  html+='</section>';
+
+  state.categories.forEach(function(cat,ci){
+    var isOpen = !!cat.open;
+    var hiddenCount = cat.items.filter(function(it){return it.visible===false;}).length;
+    var summary = cat.items.length+' poste'+(cat.items.length>1?'s':'')+' · '+eur(catTotal(cat))+(hiddenCount?' · '+hiddenCount+' masqué'+(hiddenCount>1?'s':''):'');
+    html+='<section class="card"><div class="card-head" data-action="togglecat" data-cat="'+ci+'"><span class="idx">'+(ci+1)+'</span><div style="flex:1"><h2>'+cat.nom+'</h2>'+(!isOpen?'<span class="cat-summary">'+summary+'</span>':'')+'</div><button class="btn-del" data-action="delcat" data-cat="'+ci+'">Supprimer</button><span class="chevron">'+(isOpen?'▲':'▼')+'</span></div>';
+    if(isOpen){
+      html+='<div class="card-body">';
+      if(cat.items.length>1){
+        html+='<div class="vis-toggle-row"><button class="link-btn" data-action="showallcat" data-cat="'+ci+'">Tout afficher sur le devis</button><span>·</span><button class="link-btn" data-action="hideallcat" data-cat="'+ci+'">Tout masquer du devis</button></div>';
+      }
+      cat.items.forEach(function(it,ii){
+        var lt=(Number(it.qte)||0)*(Number(it.prix)||0);
+        var hidden = it.visible===false;
+        html+='<div class="item'+(hidden?' item-hidden':'')+'">';
+        if(catalogue.length){
+          html+='<div class="field"><label>Insérer depuis le catalogue (optionnel)</label><select data-action="fillcat" data-cat="'+ci+'" data-item="'+ii+'"><option value="">— Choisir —</option>'
+              +catalogue.map(function(c,cidx){return '<option value="'+cidx+'">'+escapeHtml(c.desc)+' — '+eur(c.prix)+' / '+escapeHtml(c.unite)+'</option>';}).join('')
+              +'</select></div>';
+        }
+        html+=field('desc','Description','text',it.desc,'','item',ci,ii);
+        html+='<div class="item-row">'
+            +field('qte','Quantité','number',it.qte,'','item',ci,ii)
+            +field('unite','Unité','text',it.unite,'m², u, ml...','item',ci,ii)
+            +field('prix','Prix unitaire (€)','number',it.prix,'','item',ci,ii)
+            +'</div>';
+        html+='<div class="dispo-field">'+field('dispo','Commentaire de disponibilité','text',it.dispo,'en stock / délai 2 sem. / sur commande...','item',ci,ii)+'</div>';
+        html+='<label class="vis-check"><input type="checkbox" data-action="togglevis" data-cat="'+ci+'" data-item="'+ii+'"'+(hidden?'':' checked')+'> Visible sur le devis client'+(hidden?' <span class="vis-badge">masqué — exclu du total devis</span>':'')+'</label>';
+        html+='<div class="item-foot"><span class="line-total">'+eur(lt)+'</span><button class="btn-del" data-action="del" data-cat="'+ci+'" data-item="'+ii+'">Supprimer ce poste</button></div>';
+        html+='</div>';
+      });
+      html+='<button class="btn-add" data-action="add" data-cat="'+ci+'">+ Ajouter un poste</button>';
+      html+='<div class="cat-total"><span>Sous-total devis '+cat.nom.toLowerCase()+(hiddenCount?(' <em>('+hiddenCount+' masqué'+(hiddenCount>1?'s':'')+', non compté'+(hiddenCount>1?'s':'')+')</em>'):'')+'</span><b>'+eur(catTotal(cat))+'</b></div>';
+      html+='</div>';
+    }
+    html+='</section>';
+  });
+
+  html+='<section class="card add-cat-card"><div class="card-body">';
+  html+='<div class="field"><label for="newCatName">Ajouter une catégorie de postes</label><input type="text" id="newCatName" placeholder="ex. Électricité, Plomberie, Menuiserie..." value="'+escapeHtml(newCatDraft)+'"></div>';
+  html+='<button class="btn-add" data-action="addcat">+ Ajouter cette catégorie</button>';
+  html+='</div></section>';
+
+  html+='<section class="card"><div class="card-head" data-action="togglesection" data-section="couts"><span class="idx">'+(state.categories.length+1)+'</span><h2 style="flex:1">Coûts &amp; conditions</h2><span class="chevron">'+(openCouts?'▲':'▼')+'</span></div>';
+  if(openCouts){
+    html+='<div class="card-body">';
+    html+='<div class="grid2">'+field('finalisation.tva','TVA (%)','number',state.finalisation.tva)+field('finalisation.acomptePct','Acompte (%)','number',state.finalisation.acomptePct)+'</div>';
+    html+='<div class="grid2">'+field('finalisation.validiteJours','Validité du devis (jours)','number',state.finalisation.validiteJours)+field('finalisation.delaiExecution',"Délai d'exécution estimé",'text',state.finalisation.delaiExecution,'ex. 3 jours ouvrés')+'</div>';
+    html+=field('finalisation.garantie','Garantie / assurance','textarea',state.finalisation.garantie);
+
+    html+='<h3 class="subhead">Remises &amp; majorations</h3>';
+    (state.finalisation.ajustements||[]).forEach(function(a,ai){
+      html+='<div class="item">';
+      html+='<div class="field"><label>Libellé</label><input type="text" data-adj-edit="label" data-idx="'+ai+'" value="'+escapeHtml(a.label)+'" placeholder="ex. Remise fidélité, Majoration urgence..."></div>';
+      html+='<div class="item-row">';
+      html+='<div class="field"><label>Sens</label><select data-adj-edit="sens" data-idx="'+ai+'"><option value="remise"'+(a.sens==='remise'?' selected':'')+'>Remise (-)</option><option value="majoration"'+(a.sens==='majoration'?' selected':'')+'>Majoration (+)</option></select></div>';
+      html+='<div class="field"><label>Mode</label><select data-adj-edit="mode" data-idx="'+ai+'"><option value="pct"'+(a.mode==='pct'?' selected':'')+'>%</option><option value="fixe"'+(a.mode==='fixe'?' selected':'')+'>€</option></select></div>';
+      html+='<div class="field"><label>Valeur</label><input type="number" step="0.01" data-adj-edit="valeur" data-idx="'+ai+'" value="'+a.valeur+'"></div>';
+      html+='</div>';
+      html+='<div class="item-foot"><span></span><button class="btn-del" data-action="deladj" data-idx="'+ai+'">Supprimer cette ligne</button></div>';
+      html+='</div>';
+    });
+    html+='<button class="btn-add" data-action="addadj">+ Ajouter une remise ou majoration</button>';
+    html+='</div>';
+  }
+  html+='</section>';
+
+  var baseHt=totalHT(), maj=laborMajoration(), ajustSum=ajustementsMontant(baseHt), htFinal=baseHt+ajustSum, tva=htFinal*(Number(state.finalisation.tva)||0)/100, ttc=htFinal+tva;
+  html+='<section class="card totals-card"><div class="card-body">';
+  html+='<div class="totaux">';
+  html+='<div class="totrow"><span>Sous-total HT (postes visibles)</span><span>'+eur(baseHt-maj)+'</span></div>';
+  if(maj>0){ html+='<div class="totrow"><span>Majoration zone main d\'œuvre</span><span>'+eur(maj)+'</span></div>'; }
+  (state.finalisation.ajustements||[]).forEach(function(a){
+    var amt = a.mode==='pct' ? baseHt*(Number(a.valeur)||0)/100 : (Number(a.valeur)||0);
+    var signedAmt = a.sens==='remise' ? -amt : amt;
+    html+='<div class="totrow"><span>'+(escapeHtml(a.label)||(a.sens==='remise'?'Remise':'Majoration'))+'</span><span>'+(signedAmt>=0?'+':'')+eur(signedAmt)+'</span></div>';
+  });
+  html+='<div class="totrow"><span>Total HT</span><span>'+eur(htFinal)+'</span></div>';
+  html+='<div class="totrow"><span>TVA ('+(state.finalisation.tva||0)+' %)</span><span>'+eur(tva)+'</span></div>';
+  html+='<div class="totrow final"><span>Total TTC</span><span>'+eur(ttc)+'</span></div>';
+  html+='</div></div></section>';
+
+  html+='<p class="hint">Rien n\'est enregistré : génère tes deux documents .docx, puis "Nouveau devis" pour repartir de zéro sur le suivant.</p>';
+
+  app.innerHTML=html;
+  attachHandlers();
+
+  if(activeId){
+    var restored=document.getElementById(activeId);
+    if(restored){
+      restored.focus({preventScroll:true});
+      if(selStart!==null && typeof restored.setSelectionRange==='function'){
+        try{ restored.setSelectionRange(selStart, selEnd); }catch(e){}
+      }
+    }
+  }
+  window.scrollTo(0, prevScrollY);
+}
+
+function settingsSectionHtml(){
+  var html='<section class="card settings-card"><div class="card-head" data-action="toggle-settings"><h2 style="flex:1">⚙ Réglages tarifs (catalogue &amp; zones)</h2><span>'+(settingsOpen?'▲':'▼')+'</span></div>';
+  if(settingsOpen){
+    html+='<div class="card-body">';
+    html+='<p class="hint" style="margin-top:0">Ces réglages sont mémorisés sur cet appareil, séparément du devis en cours : configure-les une fois, ils se réutilisent pour tous tes devis.</p>';
+
+    html+='<h3 class="subhead">Catalogue de prix (matériaux &amp; main d\'œuvre)</h3>';
+    html+='<div class="field"><label for="csvImport">Importer un fichier CSV</label><input type="file" id="csvImport" accept=".csv,text/csv"></div>';
+    html+='<p class="hint" style="margin-top:-4px">Une ligne par poste : <code>description;unité;prix</code> — ex. <code>Carrelage 60x60;m²;24.50</code></p>';
+    html+='<button class="btn-add" type="button" data-action="exportcat">Exporter le catalogue actuel (CSV)</button>';
+    html+='<table class="tarif-table"><thead><tr><th>Description</th><th>Unité</th><th>Prix €</th><th></th></tr></thead><tbody>';
+    catalogue.forEach(function(c,ci){
+      html+='<tr><td><input type="text" data-cat-edit="desc" data-idx="'+ci+'" value="'+escapeHtml(c.desc)+'"></td>'
+          +'<td><input type="text" data-cat-edit="unite" data-idx="'+ci+'" value="'+escapeHtml(c.unite)+'"></td>'
+          +'<td><input type="number" step="0.01" data-cat-edit="prix" data-idx="'+ci+'" value="'+c.prix+'"></td>'
+          +'<td><button class="btn-del" data-action="delcatalog" data-idx="'+ci+'">✕</button></td></tr>';
+    });
+    html+='</tbody></table>';
+    html+='<button class="btn-add" data-action="addcatalog">+ Ajouter une ligne au catalogue</button>';
+
+    html+='<h3 class="subhead">Zones tarifaires</h3>';
+    html+='<p class="hint" style="margin-top:0">La majoration s\'applique au sous-total de la catégorie "Pose et découpe". Le forfait trajet pré-remplit automatiquement le 1er poste de "Logistique" quand tu choisis une zone.</p>';
+    html+='<table class="tarif-table"><thead><tr><th>Zone</th><th>Major. %</th><th>Trajet €</th><th></th></tr></thead><tbody>';
+    zones.forEach(function(z,zi){
+      html+='<tr><td><input type="text" data-zone-edit="nom" data-idx="'+zi+'" value="'+escapeHtml(z.nom)+'"></td>'
+          +'<td><input type="number" step="0.1" data-zone-edit="majorationPct" data-idx="'+zi+'" value="'+z.majorationPct+'"></td>'
+          +'<td><input type="number" step="0.01" data-zone-edit="forfaitTrajet" data-idx="'+zi+'" value="'+z.forfaitTrajet+'"></td>'
+          +'<td><button class="btn-del" data-action="delzone" data-idx="'+zi+'">✕</button></td></tr>';
+    });
+    html+='</tbody></table>';
+    html+='<button class="btn-add" data-action="addzone">+ Ajouter une zone</button>';
+    html+='<button class="reset-link" data-action="resettarifs" style="margin-top:14px">Réinitialiser catalogue &amp; zones (exemples par défaut)</button>';
+    html+='</div>';
+  }
+  html+='</section>';
+  return html;
+}
+
+function parseCSV(text){
+  var lines=text.split(/\r?\n/).map(function(l){return l.trim();}).filter(function(l){return l.length;});
+  var rows=[];
+  lines.forEach(function(line){
+    var sep=line.indexOf(';')>=0?';':',';
+    var parts=line.split(sep);
+    if(parts.length<3) return;
+    var desc=parts[0].trim();
+    if(/^description$/i.test(desc)) return;
+    var unite=parts[1].trim();
+    var prix=parseFloat(parts[2].trim().replace(',','.'))||0;
+    if(!desc) return;
+    rows.push({id:uid(), desc:desc, unite:unite, prix:prix});
+  });
+  return rows;
+}
+function exportCatalogueCSV(){
+  var lines=catalogue.map(function(c){ return c.desc+';'+c.unite+';'+String(c.prix).replace('.',','); });
+  var text='description;unite;prix\n'+lines.join('\n');
+  var blob=new Blob([text],{type:'text/csv;charset=utf-8'});
+  var a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='catalogue-tarifs.csv';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  setTimeout(function(){ URL.revokeObjectURL(a.href); },4000);
+}
+
+
+function field(path,label,type,value,placeholder,scope,ci,ii){
+  var id='f_'+(scope==='item'?'item_'+ci+'_'+ii+'_'+path:path.replace(/\./g,'_'));
+  var attrs='id="'+id+'" data-path="'+path+'" data-scope="'+(scope||'meta')+'"'+(scope==='item'?' data-cat="'+ci+'" data-item="'+ii+'"':'');
+  var ph=placeholder?' placeholder="'+escapeHtml(placeholder)+'"':'';
+  var val=value===undefined||value===null?'':value;
+  var inputHtml;
+  if(type==='textarea'){ inputHtml='<textarea '+attrs+ph+'>'+escapeHtml(String(val))+'</textarea>'; }
+  else{ inputHtml='<input type="'+type+'" '+attrs+ph+' value="'+escapeHtml(String(val))+'"'+(type==='number'?' step="0.01"':'')+'>'; }
+  return '<div class="field"><label for="'+id+'">'+label+'</label>'+inputHtml+'</div>';
+}
+function escapeHtml(s){ return s.replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+function attachHandlers(){
+  document.querySelectorAll('[data-scope="meta"]').forEach(function(el){
+    el.addEventListener('input',function(){ setByPath(state,el.dataset.path,el.value); queueSave(); });
+  });
+  document.querySelectorAll('[data-scope="item"]').forEach(function(el){
+    el.addEventListener('input',function(){
+      var ci=Number(el.dataset.cat), ii=Number(el.dataset.item), path=el.dataset.path, v=el.value;
+      state.categories[ci].items[ii][path]=(path==='qte'||path==='prix')?(v===''?0:Number(v)):v;
+      queueSave();
+      if(path==='qte'||path==='prix'){ render(); }
+    });
+  });
+  document.querySelectorAll('[data-action="add"]').forEach(function(el){
+    el.addEventListener('click',function(){
+      var ci=Number(el.dataset.cat);
+      state.categories[ci].items.push({desc:'',qte:0,unite:'',prix:0,dispo:'',visible:true});
+      render(); queueSave();
+    });
+  });
+  document.querySelectorAll('[data-action="del"]').forEach(function(el){
+    el.addEventListener('click',function(){
+      var ci=Number(el.dataset.cat), ii=Number(el.dataset.item);
+      state.categories[ci].items.splice(ii,1);
+      render(); queueSave();
+    });
+  });
+  document.querySelectorAll('[data-action="togglevis"]').forEach(function(el){
+    el.addEventListener('change',function(){
+      var ci=Number(el.dataset.cat), ii=Number(el.dataset.item);
+      state.categories[ci].items[ii].visible = el.checked;
+      render(); queueSave();
+    });
+  });
+  document.querySelectorAll('[data-action="showallcat"]').forEach(function(el){
+    el.addEventListener('click',function(){
+      var ci=Number(el.dataset.cat);
+      state.categories[ci].items.forEach(function(it){ it.visible=true; });
+      render(); queueSave();
+    });
+  });
+  document.querySelectorAll('[data-action="hideallcat"]').forEach(function(el){
+    el.addEventListener('click',function(){
+      var ci=Number(el.dataset.cat);
+      state.categories[ci].items.forEach(function(it){ it.visible=false; });
+      render(); queueSave();
+    });
+  });
+  document.querySelectorAll('[data-action="delcat"]').forEach(function(el){
+    el.addEventListener('click',function(e){
+      e.stopPropagation();
+      var ci=Number(el.dataset.cat);
+      if(!confirm('Supprimer toute la catégorie "'+state.categories[ci].nom+'" et ses postes ?')) return;
+      state.categories.splice(ci,1);
+      render();
+    });
+  });
+  document.querySelectorAll('[data-action="togglecat"]').forEach(function(el){
+    el.addEventListener('click',function(){
+      var ci=Number(el.dataset.cat);
+      state.categories[ci].open = !state.categories[ci].open;
+      render();
+    });
+  });
+  document.querySelectorAll('[data-action="togglesection"]').forEach(function(el){
+    el.addEventListener('click',function(){
+      var s=el.dataset.section;
+      if(s==='entreprise') openEntreprise=!openEntreprise;
+      else if(s==='client') openClient=!openClient;
+      else if(s==='couts') openCouts=!openCouts;
+      render();
+    });
+  });
+  var newCatInput=document.getElementById('newCatName');
+  if(newCatInput){
+    newCatInput.addEventListener('input',function(){ newCatDraft=newCatInput.value; });
+    newCatInput.addEventListener('keydown',function(e){ if(e.key==='Enter'){ e.preventDefault(); addCategory(); } });
+  }
+  var addCatBtn=document.querySelector('[data-action="addcat"]');
+  if(addCatBtn){ addCatBtn.addEventListener('click', addCategory); }
+
+  // zone tarifaire du chantier
+  var zoneSelect=document.getElementById('zoneSelect');
+  if(zoneSelect){
+    zoneSelect.addEventListener('change',function(){
+      state.meta.zoneId=zoneSelect.value;
+      applyZoneTrajet();
+      render();
+    });
+  }
+
+  // insérer un poste depuis le catalogue
+  document.querySelectorAll('[data-action="fillcat"]').forEach(function(el){
+    el.addEventListener('change',function(){
+      if(el.value===''){ return; }
+      var ci=Number(el.dataset.cat), ii=Number(el.dataset.item), entry=catalogue[Number(el.value)];
+      if(entry){
+        state.categories[ci].items[ii].desc=entry.desc;
+        state.categories[ci].items[ii].unite=entry.unite;
+        state.categories[ci].items[ii].prix=entry.prix;
+      }
+      render(); queueSave();
+    });
+  });
+
+  // réglages tarifs : ouverture / fermeture
+  var toggleBtn=document.querySelector('[data-action="toggle-settings"]');
+  if(toggleBtn){ toggleBtn.addEventListener('click',function(){ settingsOpen=!settingsOpen; render(); }); }
+
+  // catalogue : édition inline (sans re-rendu pour ne pas perdre le focus)
+  document.querySelectorAll('[data-cat-edit]').forEach(function(el){
+    el.addEventListener('input',function(){
+      var idx=Number(el.dataset.idx), f=el.dataset.catEdit;
+      catalogue[idx][f]= f==='prix' ? (el.value===''?0:Number(el.value)) : el.value;
+      saveJSON(CAT_KEY,catalogue);
+    });
+  });
+  document.querySelectorAll('[data-action="delcatalog"]').forEach(function(el){
+    el.addEventListener('click',function(){
+      catalogue.splice(Number(el.dataset.idx),1);
+      saveJSON(CAT_KEY,catalogue); render();
+    });
+  });
+  var addCatalogBtn=document.querySelector('[data-action="addcatalog"]');
+  if(addCatalogBtn){
+    addCatalogBtn.addEventListener('click',function(){
+      catalogue.push({id:uid(),desc:'',unite:'',prix:0});
+      saveJSON(CAT_KEY,catalogue); render();
+    });
+  }
+  var exportCatBtn=document.querySelector('[data-action="exportcat"]');
+  if(exportCatBtn){ exportCatBtn.addEventListener('click', exportCatalogueCSV); }
+  var csvImport=document.getElementById('csvImport');
+  if(csvImport){
+    csvImport.addEventListener('change',function(){
+      var file=csvImport.files && csvImport.files[0];
+      if(!file) return;
+      var reader=new FileReader();
+      reader.onload=function(){
+        var rows=parseCSV(String(reader.result||''));
+        if(!rows.length){ alert("Aucune ligne valide trouvée dans ce fichier. Vérifie le format : description;unité;prix"); csvImport.value=''; return; }
+        var replace=confirm('Remplacer le catalogue actuel par ces '+rows.length+' lignes ?\n(Annuler pour les ajouter aux tarifs existants)');
+        catalogue = replace ? rows : catalogue.concat(rows);
+        saveJSON(CAT_KEY,catalogue);
+        csvImport.value='';
+        render();
+      };
+      reader.readAsText(file);
+    });
+  }
+
+  // zones : édition inline
+  document.querySelectorAll('[data-zone-edit]').forEach(function(el){
+    el.addEventListener('input',function(){
+      var idx=Number(el.dataset.idx), f=el.dataset.zoneEdit;
+      zones[idx][f]= (f==='majorationPct'||f==='forfaitTrajet') ? (el.value===''?0:Number(el.value)) : el.value;
+      saveJSON(ZONE_KEY,zones);
+    });
+  });
+  document.querySelectorAll('[data-action="delzone"]').forEach(function(el){
+    el.addEventListener('click',function(){
+      var idx=Number(el.dataset.idx), removed=zones[idx];
+      zones.splice(idx,1);
+      if(removed && state.meta.zoneId===removed.id){ state.meta.zoneId=''; }
+      saveJSON(ZONE_KEY,zones); render();
+    });
+  });
+  var addZoneBtn=document.querySelector('[data-action="addzone"]');
+  if(addZoneBtn){
+    addZoneBtn.addEventListener('click',function(){
+      zones.push({id:uid(),nom:'',majorationPct:0,forfaitTrajet:0});
+      saveJSON(ZONE_KEY,zones); render();
+    });
+  }
+  var resetTarifsBtn=document.querySelector('[data-action="resettarifs"]');
+  if(resetTarifsBtn){
+    resetTarifsBtn.addEventListener('click',function(){
+      if(!confirm('Remplacer le catalogue et les zones par les exemples par défaut ? Tes tarifs personnalisés seront perdus.')) return;
+      catalogue=JSON.parse(JSON.stringify(defaultCatalogue));
+      zones=JSON.parse(JSON.stringify(defaultZones));
+      saveJSON(CAT_KEY,catalogue); saveJSON(ZONE_KEY,zones);
+      render();
+    });
+  }
+
+  // remises & majorations
+  document.querySelectorAll('[data-adj-edit]').forEach(function(el){
+    el.addEventListener('input',function(){
+      var idx=Number(el.dataset.idx), f=el.dataset.adjEdit;
+      var a=state.finalisation.ajustements[idx];
+      a[f] = f==='valeur' ? (el.value===''?0:Number(el.value)) : el.value;
+      queueSave();
+      if(f!=='label'){ render(); }
+    });
+  });
+  document.querySelectorAll('[data-action="deladj"]').forEach(function(el){
+    el.addEventListener('click',function(){
+      state.finalisation.ajustements.splice(Number(el.dataset.idx),1);
+      render(); queueSave();
+    });
+  });
+  var addAdjBtn=document.querySelector('[data-action="addadj"]');
+  if(addAdjBtn){
+    addAdjBtn.addEventListener('click',function(){
+      state.finalisation.ajustements.push({id:uid(), label:'', sens:'remise', mode:'pct', valeur:0});
+      render(); queueSave();
+    });
+  }
+}
+function addCategory(){
+  var name=(newCatDraft||'').trim();
+  if(!name){ var input=document.getElementById('newCatName'); if(input) input.focus(); return; }
+  state.categories.push({id:uid(), nom:name, open:true, items:[{desc:'',qte:0,unite:'',prix:0,dispo:'',visible:true}]});
+  newCatDraft='';
+  render();
+}
+function setByPath(obj,path,value){
+  var parts=path.split('.'), o=obj;
+  for(var i=0;i<parts.length-1;i++){ o=o[parts[i]]; }
+  o[parts[parts.length-1]]=value;
+}
+
+/* ---------- Word export (100% local, pas d'internet requis après le premier chargement de la librairie) ---------- */
+
+function ensureDocx(){
+  if(!window.docx){ alert("La librairie Word n'a pas fini de charger, réessaie dans un instant."); return null; }
+  return window.docx;
+}
+function para(text,opts){
+  opts=opts||{}; var d=window.docx;
+  return new d.Paragraph({heading:opts.heading, spacing:opts.spacing||{after:120},
+    children:[new d.TextRun({text:text||'', bold:!!opts.bold, size:opts.size||22, color:opts.color})]});
+}
+function tcell(text,opts){
+  opts=opts||{}; var d=window.docx;
+  return new d.TableCell({width:{size:opts.width||20,type:d.WidthType.PERCENTAGE}, shading:opts.shade?{fill:opts.shade}:undefined,
+    children:[new d.Paragraph({children:[new d.TextRun({text:text===undefined||text===null?'':String(text), bold:!!opts.bold, size:opts.size||20})]})]});
+}
+function headerRow(cells){ var d=window.docx; return new d.TableRow({children:cells.map(function(c){return tcell(c.text,{bold:true,shade:'E8E4D8',width:c.width});})}); }
+function dataRow(cells){ var d=window.docx; return new d.TableRow({children:cells.map(function(c){return tcell(c.text,{width:c.width});})}); }
+
+async function buildDevisBlob(){
+  var d=ensureDocx(); if(!d) return null;
+  var children=[];
+  children.push(para('Devis',{heading:d.HeadingLevel.HEADING_1, spacing:{after:60}}));
+  children.push(para((state.meta.numero?('N° '+state.meta.numero+'  —  '):'')+(state.meta.dateDevis||''),{color:'666666', spacing:{after:200}}));
+  children.push(para(state.meta.entreprise.nom||'Entreprise',{bold:true, spacing:{after:20}}));
+  if(state.meta.entreprise.adresse) children.push(para(state.meta.entreprise.adresse,{spacing:{after:20}}));
+  if(state.meta.entreprise.tel) children.push(para('Tél. '+state.meta.entreprise.tel,{spacing:{after:200}}));
+  children.push(para('Client',{bold:true,spacing:{after:20}}));
+  children.push(para(state.meta.client.nom||'',{spacing:{after:20}}));
+  if(state.meta.client.tel) children.push(para('Tél. '+state.meta.client.tel,{spacing:{after:20}}));
+  children.push(para('Chantier : '+(state.meta.client.adresseChantier||''),{spacing:{after:60}}));
+  var zoneInfo=currentZone();
+  if(zoneInfo){
+    children.push(para('Zone tarifaire : '+zoneInfo.nom+(zoneInfo.majorationPct?(' (majoration main d\'œuvre '+zoneInfo.majorationPct+' %)'):''),{color:'666666', spacing:{after:300}}));
+  } else {
+    children.push(para(' ',{spacing:{after:200}}));
+  }
+
+  var grandHT=0, visIdx=0;
+  state.categories.forEach(function(cat,ci){
+    var visibleItems = cat.items.filter(function(it){ return it.visible!==false; });
+    if(!visibleItems.length) return;
+    visIdx++;
+    children.push(para(visIdx+'. '+cat.nom,{heading:d.HeadingLevel.HEADING_2, spacing:{before:200,after:100}}));
+    var rows=[headerRow([{text:'Description',width:34},{text:'Qté',width:8},{text:'Unité',width:10},{text:'P.U. €',width:12},{text:'Total €',width:12},{text:'Disponibilité',width:24}])];
+    var subtotal=0;
+    visibleItems.forEach(function(it){
+      var lt=(Number(it.qte)||0)*(Number(it.prix)||0); subtotal+=lt;
+      rows.push(dataRow([{text:it.desc,width:34},{text:it.qte,width:8},{text:it.unite,width:10},{text:(Number(it.prix)||0).toFixed(2),width:12},{text:lt.toFixed(2),width:12},{text:it.dispo||'—',width:24}]));
+    });
+    grandHT+=subtotal;
+    children.push(new d.Table({width:{size:100,type:d.WidthType.PERCENTAGE}, rows:rows}));
+    children.push(para('Sous-total : '+eur(subtotal),{bold:true, spacing:{before:80,after:0}}));
+  });
+
+  var majAmt=laborMajoration();
+  grandHT+=majAmt;
+  var ajustSum=ajustementsMontant(grandHT);
+  var htFinal=grandHT+ajustSum;
+  var tvaRate=Number(state.finalisation.tva)||0, tvaAmt=htFinal*tvaRate/100, ttc=htFinal+tvaAmt;
+  children.push(para(' ',{spacing:{after:100}}));
+  if(majAmt>0 && zoneInfo){ children.push(para('Majoration zone "'+zoneInfo.nom+'" ('+zoneInfo.majorationPct+' %) : '+eur(majAmt))); }
+  (state.finalisation.ajustements||[]).forEach(function(a){
+    var amt = a.mode==='pct' ? grandHT*(Number(a.valeur)||0)/100 : (Number(a.valeur)||0);
+    var signedAmt = a.sens==='remise' ? -amt : amt;
+    children.push(para((a.label||(a.sens==='remise'?'Remise':'Majoration'))+' : '+(signedAmt>=0?'+':'')+eur(signedAmt)));
+  });
+  children.push(para('Total HT : '+eur(htFinal)));
+  children.push(para('TVA ('+tvaRate+' %) : '+eur(tvaAmt)));
+  children.push(para('Total TTC : '+eur(ttc),{bold:true, size:26, spacing:{after:300}}));
+  children.push(para('Conditions',{heading:d.HeadingLevel.HEADING_2, spacing:{after:100}}));
+  children.push(para('Devis valable '+(state.finalisation.validiteJours||30)+' jours.'));
+  children.push(para('Acompte de '+(state.finalisation.acomptePct||0)+' % à la commande.'));
+  if(state.finalisation.delaiExecution) children.push(para("Délai d'exécution estimé : "+state.finalisation.delaiExecution));
+  if(state.finalisation.garantie) children.push(para(state.finalisation.garantie));
+
+  var doc=new d.Document({sections:[{children:children}]});
+  return await d.Packer.toBlob(doc);
+}
+
+async function buildFicheBlob(){
+  var d=ensureDocx(); if(!d) return null;
+  var children=[];
+  children.push(para('Fiche technique',{heading:d.HeadingLevel.HEADING_1, spacing:{after:60}}));
+  children.push(para("À suivre par l'exécutant des travaux",{color:'666666', spacing:{after:200}}));
+  children.push(para('Adresse du chantier : '+(state.meta.client.adresseChantier||''),{bold:true,spacing:{after:20}}));
+  children.push(para('Client : '+(state.meta.client.nom||'')+(state.meta.client.tel?(' — '+state.meta.client.tel):''),{spacing:{after:20}}));
+  children.push(para('Date prévue : '+(state.dateChantierPrevue||'à confirmer'),{spacing:{after:20}}));
+  var zoneInfoFiche=currentZone();
+  if(zoneInfoFiche){ children.push(para('Zone : '+zoneInfoFiche.nom,{spacing:{after:20}})); }
+  if(state.accesConsignes) children.push(para('Accès / consignes : '+state.accesConsignes,{spacing:{after:300}}));
+  else children.push(para(' ',{spacing:{after:200}}));
+
+  state.categories.forEach(function(cat,ci){
+    children.push(para((ci+1)+'. '+cat.nom,{heading:d.HeadingLevel.HEADING_2, spacing:{before:200,after:100}}));
+    var rows=[headerRow([{text:'☐',width:6},{text:'Description',width:34},{text:'Qté',width:10},{text:'Unité',width:12},{text:'Disponibilité',width:38}])];
+    cat.items.forEach(function(it){
+      rows.push(dataRow([{text:'☐',width:6},{text:it.desc,width:34},{text:it.qte,width:10},{text:it.unite,width:12},{text:it.dispo||'—',width:38}]));
+    });
+    children.push(new d.Table({width:{size:100,type:d.WidthType.PERCENTAGE}, rows:rows}));
+  });
+
+  children.push(para(' ',{spacing:{before:300,after:100}}));
+  children.push(para('Signature / date de fin de chantier :',{bold:true}));
+
+  var doc=new d.Document({sections:[{children:children}]});
+  return await d.Packer.toBlob(doc);
+}
+
+async function exportDoc(kind,btn){
+  var oldText=btn.textContent;
+  btn.disabled=true; btn.textContent='Génération...';
+  try{
+    var blob=kind==='devis'?await buildDevisBlob():await buildFicheBlob();
+    if(!blob){ btn.disabled=false; btn.textContent=oldText; return; }
+    var filename=(kind==='devis'?'devis-carrelage':'fiche-technique-carrelage')+(state.meta.numero?('-'+state.meta.numero):'')+'.docx';
+    var a=document.createElement('a');
+    a.href=URL.createObjectURL(blob); a.download=filename;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    setTimeout(function(){ URL.revokeObjectURL(a.href); },4000);
+  }catch(e){ console.error(e); alert('Erreur pendant la génération du document Word.'); }
+  finally{ btn.disabled=false; btn.textContent=oldText; }
+}
+
+document.getElementById('btnDevis').addEventListener('click',function(){ exportDoc('devis',this); });
+document.getElementById('btnFiche').addEventListener('click',function(){ exportDoc('fiche',this); });
+document.getElementById('btnReset').addEventListener('click', resetForm);
+
+render();
+})();
+</script>
+</body>
+</html>
