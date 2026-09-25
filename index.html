@@ -54,6 +54,12 @@ code{background:var(--surface-2); padding:1px 5px; border-radius:4px; font-size:
 .bulk-adjust-row{display:flex; gap:8px;}
 .bulk-adjust-row input{flex:1; padding:9px 10px; border:1px solid var(--line-strong); border-radius:8px; background:var(--surface-2); color:var(--ink); font-size:14px;}
 .bulk-adjust-row button{flex:none; white-space:nowrap;}
+.ai-prompt-box{margin-top:16px; padding:14px; border:1px solid var(--line-strong); border-radius:10px; background:var(--surface-2);}
+.ai-prompt-box h4{font-family:var(--font-head); font-size:13px; margin:0 0 8px;}
+.ai-steps{margin:0 0 12px; padding-left:18px; font-size:12px; color:var(--ink-soft); line-height:1.6;}
+.ai-prompt-text{background:var(--surface-1); border:1px solid var(--line); border-radius:8px; padding:10px; font-size:12px; line-height:1.5; color:var(--ink); max-height:180px; overflow-y:auto; margin-bottom:10px; white-space:pre-wrap; -webkit-user-select:text; user-select:text;}
+#copyPromptBtn{width:100%;}
+.pdf-links{display:flex; justify-content:center; gap:8px; margin-top:10px; padding-top:10px; border-top:1px solid var(--line); font-size:12px;}
 .card-head .idx{font-family:var(--font-head); font-weight:700; font-size:13px; color:var(--accent-ink); background:var(--accent); width:22px;height:22px;border-radius:6px; display:flex;align-items:center;justify-content:center;flex:none;}
 .card-head h2{font-size:16px;}
 .card-body{padding:12px 16px 16px;}
@@ -242,6 +248,7 @@ function loadJSON(key,fallback){
 }
 function saveJSON(key,val){ try{ localStorage.setItem(key, JSON.stringify(val)); }catch(e){ console.warn('sauvegarde réglages impossible', e); } }
 var catalogue = loadJSON(CAT_KEY, defaultCatalogue);
+var AI_PROMPT = "J'ai un fichier CSV avec des colonnes description;unite;prix, ou prix vaut 0 pour chaque ligne. Pour chaque ligne, remplace le 0 par une estimation realiste du prix en euros TTC en Belgique en 2026 (materiaux ou main d'oeuvre en renovation/carrelage selon la description). Reponds uniquement avec le CSV complet au meme format (description;unite;prix), sans texte autour. Ajoute une colonne supplementaire \"note\" indiquant \"estimation a verifier\" sur chaque ligne, pour bien distinguer ces prix des prix reels.";
 var zones = loadJSON(ZONE_KEY, defaultZones);
 
 
@@ -401,6 +408,7 @@ function render(){
   html+='<div class="totrow"><span>Total HT</span><span>'+eur(htFinal)+'</span></div>';
   html+='<div class="totrow"><span>TVA ('+(state.finalisation.tva||0)+' %)</span><span>'+eur(tva)+'</span></div>';
   html+='<div class="totrow final"><span>Total TTC</span><span>'+eur(ttc)+'</span></div>';
+  html+='<div class="pdf-links"><button class="link-btn" type="button" data-action="printdevis">📄 Aperçu PDF du devis</button><span>·</span><button class="link-btn" type="button" data-action="printfiche">📄 Aperçu PDF de la fiche technique</button></div>';
   html+='</div></div></section>';
 
   html+='<p class="hint">Rien n\'est enregistré : génère tes deux documents .docx, puis "Nouveau devis" pour repartir de zéro sur le suivant.</p>';
@@ -430,6 +438,15 @@ function settingsSectionHtml(){
     html+='<div class="field"><label for="csvImport">Importer un fichier CSV</label><input type="file" id="csvImport" accept=".csv,text/csv"></div>';
     html+='<p class="hint" style="margin-top:-4px">Une ligne par poste : <code>description;unité;prix</code> — ex. <code>Carrelage 60x60;m²;24.50</code></p>';
     html+='<button class="btn-add" type="button" data-action="exportcat">Exporter le catalogue actuel (CSV)</button>';
+    html+='<button class="btn-add" type="button" data-action="exportunpriced">Exporter les lignes sans prix (CSV)</button>';
+
+    html+='<div class="ai-prompt-box">';
+    html+='<h4>Estimer les prix manquants avec une IA (Claude, ChatGPT...)</h4>';
+    html+='<ol class="ai-steps"><li>Clique sur "Exporter les lignes sans prix" ci-dessus.</li><li>Ouvre un chat Claude.ai ou ChatGPT (gratuit).</li><li>Dépose ce fichier + colle le prompt ci-dessous (bouton Copier).</li><li>Récupère le CSV renvoyé, réimporte-le ici via "Importer un fichier CSV".</li></ol>';
+    html+='<div class="ai-prompt-text" id="aiPromptText">'+escapeHtml(AI_PROMPT)+'</div>';
+    html+='<button class="btn-add" type="button" data-action="copyprompt" id="copyPromptBtn">📋 Copier le prompt</button>';
+    html+='<p class="hint" style="margin-top:8px"><strong>Important :</strong> ces prix sont des estimations IA, pas des données vérifiées — recroise les gros postes avec un vrai fournisseur avant d\'envoyer un devis final.</p>';
+    html+='</div>';
     html+='<table class="tarif-table"><thead><tr><th>Description</th><th>Unité</th><th>Prix €</th><th></th></tr></thead><tbody>';
     catalogue.forEach(function(c,ci){
       html+='<tr><td><input type="text" data-cat-edit="desc" data-idx="'+ci+'" value="'+escapeHtml(c.desc)+'"></td>'
@@ -478,8 +495,18 @@ function parseCSV(text){
 function exportCatalogueCSV(){
   var lines=catalogue.map(function(c){ return c.desc+';'+c.unite+';'+String(c.prix).replace('.',','); });
   var text='description;unite;prix\n'+lines.join('\n');
+  downloadCSV(text,'catalogue-tarifs.csv');
+}
+function exportUnpricedCSV(){
+  var unpriced=catalogue.filter(function(c){ return !c.prix; });
+  if(!unpriced.length){ alert('Toutes les lignes du catalogue ont déjà un prix.'); return; }
+  var lines=unpriced.map(function(c){ return c.desc+';'+c.unite+';0'; });
+  var text='description;unite;prix\n'+lines.join('\n');
+  downloadCSV(text,'postes-sans-prix.csv');
+}
+function downloadCSV(text,filename){
   var blob=new Blob([text],{type:'text/csv;charset=utf-8'});
-  var a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='catalogue-tarifs.csv';
+  var a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=filename;
   document.body.appendChild(a); a.click(); document.body.removeChild(a);
   setTimeout(function(){ URL.revokeObjectURL(a.href); },4000);
 }
@@ -640,6 +667,28 @@ function attachHandlers(){
   }
   var exportCatBtn=document.querySelector('[data-action="exportcat"]');
   if(exportCatBtn){ exportCatBtn.addEventListener('click', exportCatalogueCSV); }
+  var exportUnpricedBtn=document.querySelector('[data-action="exportunpriced"]');
+  if(exportUnpricedBtn){ exportUnpricedBtn.addEventListener('click', exportUnpricedCSV); }
+  var copyPromptBtn=document.getElementById('copyPromptBtn');  if(copyPromptBtn){
+    copyPromptBtn.addEventListener('click',function(){
+      var done=function(){
+        var old=copyPromptBtn.textContent;
+        copyPromptBtn.textContent='✅ Copié !';
+        setTimeout(function(){ copyPromptBtn.textContent=old; },2000);
+      };
+      if(navigator.clipboard && navigator.clipboard.writeText){
+        navigator.clipboard.writeText(AI_PROMPT).then(done).catch(function(){ fallbackCopy(); });
+      } else { fallbackCopy(); }
+      function fallbackCopy(){
+        var ta=document.createElement('textarea');
+        ta.value=AI_PROMPT; ta.style.position='fixed'; ta.style.opacity='0';
+        document.body.appendChild(ta); ta.focus(); ta.select();
+        try{ document.execCommand('copy'); done(); }
+        catch(e){ alert('Copie automatique impossible. Sélectionne le texte du prompt à la main et copie-le.'); }
+        document.body.removeChild(ta);
+      }
+    });
+  }
   var csvImport=document.getElementById('csvImport');
   if(csvImport){
     csvImport.addEventListener('change',function(){
@@ -839,6 +888,86 @@ async function buildFicheBlob(){
   return await d.Packer.toBlob(doc);
 }
 
+/* ---------- Version PDF (via l'aperçu d'impression du navigateur, sans librairie) ---------- */
+
+function buildPrintableHtml(kind){
+  var isDevis = kind==='devis';
+  var title = isDevis ? 'Devis' : 'Fiche technique';
+  var subtitle = isDevis
+    ? ((state.meta.numero?('N° '+state.meta.numero+' — '):'')+(state.meta.dateDevis||''))
+    : "À suivre par l'exécutant des travaux";
+  var css = '@page{size:A4;margin:16mm;} body{font-family:Arial,Helvetica,sans-serif;color:#222;font-size:12px;line-height:1.45;margin:0;padding:16px;}'
+    +'h1{font-size:20px;margin:0 0 4px;} h2{font-size:14px;margin:18px 0 6px;border-bottom:1px solid #ccc;padding-bottom:2px;}'
+    +'table{width:100%;border-collapse:collapse;margin-bottom:6px;} th,td{border:1px solid #ccc;padding:4px 6px;text-align:left;font-size:11px;} th{background:#f2f2f2;}'
+    +'.muted{color:#666;} .totrow{display:flex;justify-content:space-between;padding:3px 0;} .totrow.final{font-weight:bold;font-size:14px;border-top:1px solid #333;margin-top:4px;padding-top:6px;}'
+    +'.print-bar{margin-bottom:16px;} .print-bar button{padding:10px 16px;font-size:14px;border-radius:8px;border:1px solid #999;background:#f5f5f5;}'
+    +'@media print{ .print-bar{display:none;} }';
+  var html='<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>'+title+'</title><style>'+css+'</style></head><body>';
+  html+='<div class="print-bar"><button onclick="window.print()">🖨️ Imprimer / Enregistrer en PDF</button></div>';
+  html+='<h1>'+title+'</h1><p class="muted">'+escapeHtml(subtitle)+'</p>';
+
+  var zoneInfo=currentZone();
+  if(isDevis){
+    html+='<p><b>'+escapeHtml(state.meta.entreprise.nom||'Entreprise')+'</b><br>'+escapeHtml(state.meta.entreprise.adresse||'')+'<br>'+(state.meta.entreprise.tel?('Tél. '+escapeHtml(state.meta.entreprise.tel)):'')+'</p>';
+    html+='<p><b>Client</b><br>'+escapeHtml(state.meta.client.nom||'')+'<br>'+(state.meta.client.tel?('Tél. '+escapeHtml(state.meta.client.tel)):'')+'<br>Chantier : '+escapeHtml(state.meta.client.adresseChantier||'')+'</p>';
+    if(zoneInfo){ html+='<p class="muted">Zone tarifaire : '+escapeHtml(zoneInfo.nom)+(zoneInfo.majorationPct?(' (majoration '+zoneInfo.majorationPct+' %)'):'')+'</p>'; }
+
+    var grandHT=0, visIdx=0;
+    state.categories.forEach(function(cat){
+      var visibleItems=cat.items.filter(function(it){ return it.visible!==false; });
+      if(!visibleItems.length) return;
+      visIdx++;
+      html+='<h2>'+visIdx+'. '+escapeHtml(cat.nom)+'</h2>';
+      html+='<table><tr><th>Description</th><th>Qté</th><th>Unité</th><th>P.U. €</th><th>Total €</th><th>Disponibilité</th></tr>';
+      var subtotal=0;
+      visibleItems.forEach(function(it){
+        var lt=(Number(it.qte)||0)*(Number(it.prix)||0); subtotal+=lt;
+        html+='<tr><td>'+escapeHtml(it.desc)+'</td><td>'+it.qte+'</td><td>'+escapeHtml(it.unite)+'</td><td>'+(Number(it.prix)||0).toFixed(2)+'</td><td>'+lt.toFixed(2)+'</td><td>'+escapeHtml(it.dispo||'—')+'</td></tr>';
+      });
+      html+='</table><p style="text-align:right"><b>Sous-total : '+eur(subtotal)+'</b></p>';
+      grandHT+=subtotal;
+    });
+    var majAmt=laborMajoration(); grandHT+=majAmt;
+    var ajustSum=ajustementsMontant(grandHT), htFinal=grandHT+ajustSum;
+    var tvaRate=Number(state.finalisation.tva)||0, tvaAmt=htFinal*tvaRate/100, ttc=htFinal+tvaAmt;
+    html+='<h2>Récapitulatif</h2>';
+    if(majAmt>0 && zoneInfo){ html+='<div class="totrow"><span>Majoration zone "'+escapeHtml(zoneInfo.nom)+'"</span><span>'+eur(majAmt)+'</span></div>'; }
+    (state.finalisation.ajustements||[]).forEach(function(a){
+      var amt=a.mode==='pct'?grandHT*(Number(a.valeur)||0)/100:(Number(a.valeur)||0);
+      var signedAmt=a.sens==='remise'?-amt:amt;
+      html+='<div class="totrow"><span>'+escapeHtml(a.label||(a.sens==='remise'?'Remise':'Majoration'))+'</span><span>'+(signedAmt>=0?'+':'')+eur(signedAmt)+'</span></div>';
+    });
+    html+='<div class="totrow"><span>Total HT</span><span>'+eur(htFinal)+'</span></div>';
+    html+='<div class="totrow"><span>TVA ('+tvaRate+' %)</span><span>'+eur(tvaAmt)+'</span></div>';
+    html+='<div class="totrow final"><span>Total TTC</span><span>'+eur(ttc)+'</span></div>';
+    html+='<h2>Conditions</h2><p>Devis valable '+(state.finalisation.validiteJours||30)+' jours.<br>Acompte de '+(state.finalisation.acomptePct||0)+' % à la commande.'
+        +(state.finalisation.delaiExecution?('<br>Délai d\'exécution estimé : '+escapeHtml(state.finalisation.delaiExecution)):'')
+        +(state.finalisation.garantie?('<br>'+escapeHtml(state.finalisation.garantie)):'')+'</p>';
+  } else {
+    html+='<p><b>Adresse du chantier :</b> '+escapeHtml(state.meta.client.adresseChantier||'')+'<br><b>Client :</b> '+escapeHtml(state.meta.client.nom||'')+(state.meta.client.tel?(' — '+escapeHtml(state.meta.client.tel)):'')+'<br><b>Date prévue :</b> '+escapeHtml(state.dateChantierPrevue||'à confirmer')+'</p>';
+    if(zoneInfo){ html+='<p class="muted">Zone : '+escapeHtml(zoneInfo.nom)+'</p>'; }
+    if(state.accesConsignes){ html+='<p><b>Accès / consignes :</b> '+escapeHtml(state.accesConsignes)+'</p>'; }
+    state.categories.forEach(function(cat,ci){
+      html+='<h2>'+(ci+1)+'. '+escapeHtml(cat.nom)+'</h2>';
+      html+='<table><tr><th></th><th>Description</th><th>Qté</th><th>Unité</th><th>Disponibilité</th></tr>';
+      cat.items.forEach(function(it){
+        html+='<tr><td>☐</td><td>'+escapeHtml(it.desc)+'</td><td>'+it.qte+'</td><td>'+escapeHtml(it.unite)+'</td><td>'+escapeHtml(it.dispo||'—')+'</td></tr>';
+      });
+      html+='</table>';
+    });
+    html+='<p style="margin-top:30px"><b>Signature / date de fin de chantier :</b></p>';
+  }
+  html+='</body></html>';
+  return html;
+}
+
+function openPrintable(kind){
+  var html=buildPrintableHtml(kind);
+  var w=window.open('','_blank');
+  if(!w){ alert("Le navigateur a bloqué l'ouverture d'un nouvel onglet pour le PDF. Autorise les pop-ups pour ce site puis réessaie."); return; }
+  w.document.open(); w.document.write(html); w.document.close();
+}
+
 var docxReady = false;
 async function exportDoc(kind,btn){
   if(!docxReady){ return; }
@@ -859,6 +988,11 @@ async function exportDoc(kind,btn){
 document.getElementById('btnDevis').addEventListener('click',function(){ exportDoc('devis',this); });
 document.getElementById('btnFiche').addEventListener('click',function(){ exportDoc('fiche',this); });
 document.getElementById('btnReset').addEventListener('click', resetForm);
+document.addEventListener('click', function(e){
+  var t = e.target.closest && e.target.closest('[data-action="printdevis"], [data-action="printfiche"]');
+  if(!t) return;
+  openPrintable(t.dataset.action==='printdevis' ? 'devis' : 'fiche');
+});
 
 render();
 
