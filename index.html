@@ -41,6 +41,8 @@ section.card{background:var(--surface-1); border:1px solid var(--line); border-r
 .card-head .chevron{color:var(--ink-soft); font-size:11px; flex:none;}
 .cat-summary{display:block; font-size:12px; color:var(--ink-soft); font-weight:400; margin-top:2px;}
 .add-cat-card{border-style:dashed; background:transparent;}
+.guide-card{border-color:var(--accent); border-width:1.5px;}
+.guide-card .card-head{background:var(--accent-soft, rgba(216,85,10,0.08));}
 .subhead{font-family:var(--font-head); font-size:14px; margin:18px 0 8px; padding-top:14px; border-top:1px solid var(--line);}
 .subhead:first-of-type{border-top:none; padding-top:0; margin-top:0;}
 .tarif-table{width:100%; border-collapse:collapse; margin:10px 0;}
@@ -55,11 +57,22 @@ code{background:var(--surface-2); padding:1px 5px; border-radius:4px; font-size:
 .bulk-adjust-row input{flex:1; padding:9px 10px; border:1px solid var(--line-strong); border-radius:8px; background:var(--surface-2); color:var(--ink); font-size:14px;}
 .bulk-adjust-row button{flex:none; white-space:nowrap;}
 .ai-prompt-box{margin-top:16px; padding:14px; border:1px solid var(--line-strong); border-radius:10px; background:var(--surface-2);}
-.ai-prompt-box h4{font-family:var(--font-head); font-size:13px; margin:0 0 8px;}
-.ai-steps{margin:0 0 12px; padding-left:18px; font-size:12px; color:var(--ink-soft); line-height:1.6;}
+.ai-prompt-box h4{font-family:var(--font-head); font-size:13px; margin:0 0 12px;}
+.ai-step{display:flex; gap:10px; margin-bottom:14px; align-items:flex-start;}
+.ai-step:last-of-type{margin-bottom:0;}
+.step-num{flex:none; width:24px; height:24px; border-radius:7px; background:var(--accent); color:var(--accent-ink); font-family:var(--font-head); font-weight:700; font-size:13px; display:flex; align-items:center; justify-content:center; margin-top:2px;}
+.step-body{flex:1; min-width:0;}
+.step-body p{margin:0 0 8px; font-size:13px; color:var(--ink);}
+.step-body .btn-add{width:100%;}
 .ai-prompt-text{background:var(--surface-1); border:1px solid var(--line); border-radius:8px; padding:10px; font-size:12px; line-height:1.5; color:var(--ink); max-height:180px; overflow-y:auto; margin-bottom:10px; white-space:pre-wrap; -webkit-user-select:text; user-select:text;}
 #copyPromptBtn{width:100%;}
 .pdf-links{display:flex; justify-content:center; gap:8px; margin-top:10px; padding-top:10px; border-top:1px solid var(--line); font-size:12px;}
+.field-with-mic{display:flex; gap:6px; align-items:stretch;}
+.field-with-mic input, .field-with-mic textarea{flex:1;}
+.mic-btn{flex:none; width:42px; border:1px solid var(--line-strong); border-radius:8px; background:var(--surface-2); font-size:17px; cursor:pointer; display:flex; align-items:center; justify-content:center;}
+.mic-btn.mic-listening{background:var(--danger); border-color:var(--danger); animation:mic-pulse 1s infinite;}
+@keyframes mic-pulse{0%{opacity:1;}50%{opacity:0.55;}100%{opacity:1;}}
+.calc-hint{display:block; font-size:11px; color:var(--ink-soft); margin-top:3px;}
 .card-head .idx{font-family:var(--font-head); font-weight:700; font-size:13px; color:var(--accent-ink); background:var(--accent); width:22px;height:22px;border-radius:6px; display:flex;align-items:center;justify-content:center;flex:none;}
 .card-head h2{font-size:16px;}
 .card-body{padding:12px 16px 16px;}
@@ -156,6 +169,7 @@ var state = JSON.parse(JSON.stringify(defaultState));
 var newCatDraft = '';
 var settingsOpen = false;
 var openEntreprise = true, openClient = true, openCouts = false;
+var openGuide = true;
 function uid(){ return Math.random().toString(36).slice(2,9); }
 
 var CAT_KEY='devis-carrelage-catalogue-v1', ZONE_KEY='devis-carrelage-zones-v1';
@@ -302,6 +316,7 @@ function render(){
     }
   }catch(e){ selStart=null; selEnd=null; }
 
+  html+=guideSectionHtml();
   html+=settingsSectionHtml();
 
   html+='<section class="card"><div class="card-head" data-action="togglesection" data-section="entreprise"><h2 style="flex:1">Entreprise &amp; devis</h2><span class="chevron">'+(openEntreprise?'▲':'▼')+'</span></div>';
@@ -428,6 +443,21 @@ function render(){
   window.scrollTo(0, prevScrollY);
 }
 
+function guideSectionHtml(){
+  var html='<section class="card guide-card"><div class="card-head" data-action="togglesection" data-section="guide"><h2 style="flex:1">🧭 Comment utiliser cet outil</h2><span class="chevron">'+(openGuide?'▲':'▼')+'</span></div>';
+  if(openGuide){
+    html+='<div class="card-body">';
+    html+='<div class="ai-step"><span class="step-num">1</span><div class="step-body"><p><strong>Remplis "Entreprise & devis" et "Client & chantier"</strong> ci-dessous (numéro de devis, coordonnées, adresse du chantier). Choisis une zone tarifaire si le lieu du client influence tes prix.</p></div></div>';
+    html+='<div class="ai-step"><span class="step-num">2</span><div class="step-body"><p><strong>Dans chaque catégorie</strong> (Métré, Matériaux, Pose, Travaux annexes, Logistique...), ajoute tes postes. Utilise le menu "Insérer depuis le catalogue" sur chaque poste pour aller plus vite, ou tape tes propres description/quantité/prix. Le champ Quantité accepte une multiplication (ex. <code>3.2x2.4</code> pour une pièce de 3,2 × 2,4 m) qui se calcule automatiquement en m². Sur les champs texte, une icône micro 🎤 permet de dicter au lieu de taper.</p></div></div>';
+    html+='<div class="ai-step"><span class="step-num">3</span><div class="step-body"><p><strong>Décoche "Visible sur le devis client"</strong> pour les postes que le client ne doit pas voir en détail (ils restent visibles sur la fiche technique de l\'exécutant).</p></div></div>';
+    html+='<div class="ai-step"><span class="step-num">4</span><div class="step-body"><p><strong>Dans "Coûts & conditions"</strong>, vérifie la TVA, ajoute une remise ou une majoration si besoin, puis contrôle le total tout en bas de la page.</p></div></div>';
+    html+='<div class="ai-step"><span class="step-num">5</span><div class="step-body"><p><strong>Génère tes deux documents</strong> : les boutons "Devis client (.docx)" et "Fiche technique (.docx)" tout en bas de l\'écran, ou les liens "Aperçu PDF" juste au-dessus si tu préfères le PDF.</p></div></div>';
+    html+='<div class="ai-step"><span class="step-num">6</span><div class="step-body"><p><strong>Clique "Nouveau devis"</strong> (en haut de la page) pour vider le formulaire et repartir de zéro sur le prochain chantier. Rien n\'est enregistré d\'un devis à l\'autre — seuls le catalogue et les zones tarifaires sont mémorisés.</p></div></div>';
+    html+='</div>';
+  }
+  html+='</section>';
+  return html;
+}
 function settingsSectionHtml(){
   var html='<section class="card settings-card"><div class="card-head" data-action="toggle-settings"><h2 style="flex:1">⚙ Réglages tarifs (catalogue &amp; zones)</h2><span>'+(settingsOpen?'▲':'▼')+'</span></div>';
   if(settingsOpen){
@@ -438,15 +468,32 @@ function settingsSectionHtml(){
     html+='<div class="field"><label for="csvImport">Importer un fichier CSV</label><input type="file" id="csvImport" accept=".csv,text/csv"></div>';
     html+='<p class="hint" style="margin-top:-4px">Une ligne par poste : <code>description;unité;prix</code> — ex. <code>Carrelage 60x60;m²;24.50</code></p>';
     html+='<button class="btn-add" type="button" data-action="exportcat">Exporter le catalogue actuel (CSV)</button>';
-    html+='<button class="btn-add" type="button" data-action="exportunpriced">Exporter les lignes sans prix (CSV)</button>';
 
     html+='<div class="ai-prompt-box">';
     html+='<h4>Estimer les prix manquants avec une IA (Claude, ChatGPT...)</h4>';
-    html+='<ol class="ai-steps"><li>Clique sur "Exporter les lignes sans prix" ci-dessus.</li><li>Ouvre un chat Claude.ai ou ChatGPT (gratuit).</li><li>Dépose ce fichier + colle le prompt ci-dessous (bouton Copier).</li><li>Récupère le CSV renvoyé, réimporte-le ici via "Importer un fichier CSV".</li></ol>';
-    html+='<div class="ai-prompt-text" id="aiPromptText">'+escapeHtml(AI_PROMPT)+'</div>';
-    html+='<button class="btn-add" type="button" data-action="copyprompt" id="copyPromptBtn">📋 Copier le prompt</button>';
-    html+='<p class="hint" style="margin-top:8px"><strong>Important :</strong> ces prix sont des estimations IA, pas des données vérifiées — recroise les gros postes avec un vrai fournisseur avant d\'envoyer un devis final.</p>';
+
+    html+='<div class="ai-step"><span class="step-num">1</span><div class="step-body">'
+        +'<p>Exporte les postes qu\'il te reste à chiffrer :</p>'
+        +'<button class="btn-add" type="button" data-action="exportunpriced">Exporter les lignes sans prix (CSV)</button>'
+        +'</div></div>';
+
+    html+='<div class="ai-step"><span class="step-num">2</span><div class="step-body">'
+        +'<p>Ouvre un chat <strong>Claude.ai</strong> ou <strong>ChatGPT</strong> (gratuit) et dépose ce fichier dedans.</p>'
+        +'</div></div>';
+
+    html+='<div class="ai-step"><span class="step-num">3</span><div class="step-body">'
+        +'<p>Dans le même message, colle ce prompt puis envoie :</p>'
+        +'<div class="ai-prompt-text" id="aiPromptText">'+escapeHtml(AI_PROMPT)+'</div>'
+        +'<button class="btn-add" type="button" data-action="copyprompt" id="copyPromptBtn">📋 Copier le prompt</button>'
+        +'</div></div>';
+
+    html+='<div class="ai-step"><span class="step-num">4</span><div class="step-body">'
+        +'<p>Récupère le fichier CSV que l\'IA te renvoie, puis reviens ici et importe-le avec le champ <strong>"Importer un fichier CSV"</strong> tout en haut de ce bloc (choisis "ajouter aux tarifs existants").</p>'
+        +'</div></div>';
+
+    html+='<p class="hint" style="margin-top:4px"><strong>Important :</strong> ces prix sont des estimations IA, pas des données vérifiées — recroise les gros postes avec un vrai fournisseur avant d\'envoyer un devis final.</p>';
     html+='</div>';
+
     html+='<table class="tarif-table"><thead><tr><th>Description</th><th>Unité</th><th>Prix €</th><th></th></tr></thead><tbody>';
     catalogue.forEach(function(c,ci){
       html+='<tr><td><input type="text" data-cat-edit="desc" data-idx="'+ci+'" value="'+escapeHtml(c.desc)+'"></td>'
@@ -515,14 +562,66 @@ function downloadCSV(text,filename){
 function field(path,label,type,value,placeholder,scope,ci,ii){
   var id='f_'+(scope==='item'?'item_'+ci+'_'+ii+'_'+path:path.replace(/\./g,'_'));
   var attrs='id="'+id+'" data-path="'+path+'" data-scope="'+(scope||'meta')+'"'+(scope==='item'?' data-cat="'+ci+'" data-item="'+ii+'"':'');
-  var ph=placeholder?' placeholder="'+escapeHtml(placeholder)+'"':'';
   var val=value===undefined||value===null?'':value;
+  var isQte = (path==='qte');
+  var inputType = isQte ? 'text' : type;
+  var ph = placeholder;
+  if(isQte){ ph = ph || 'ex. 3.2x2.4 ou 7.5'; }
+  var phAttr = ph ? ' placeholder="'+escapeHtml(ph)+'"' : '';
   var inputHtml;
-  if(type==='textarea'){ inputHtml='<textarea '+attrs+ph+'>'+escapeHtml(String(val))+'</textarea>'; }
-  else{ inputHtml='<input type="'+type+'" '+attrs+ph+' value="'+escapeHtml(String(val))+'"'+(type==='number'?' step="0.01"':'')+'>'; }
-  return '<div class="field"><label for="'+id+'">'+label+'</label>'+inputHtml+'</div>';
+  if(type==='textarea'){ inputHtml='<textarea '+attrs+phAttr+'>'+escapeHtml(String(val))+'</textarea>'; }
+  else{
+    var extra = isQte ? ' inputmode="decimal" data-calc="1"' : '';
+    inputHtml='<input type="'+inputType+'" '+attrs+phAttr+extra+' value="'+escapeHtml(String(val))+'"'+(inputType==='number'?' step="0.01"':'')+'>';
+  }
+  var withMic = micSupported && (type==='text' || type==='textarea') && !isQte;
+  if(withMic){
+    inputHtml = '<div class="field-with-mic">'+inputHtml+'<button type="button" class="mic-btn" data-target="'+id+'" aria-label="Dicter">🎤</button></div>';
+  }
+  var calcHint = isQte ? '<span class="calc-hint">tape une multiplication (ex. 3.2x2.4), elle se calcule toute seule</span>' : '';
+  return '<div class="field"><label for="'+id+'">'+label+'</label>'+inputHtml+calcHint+'</div>';
 }
 function escapeHtml(s){ return s.replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+/* ---------- Calculette intégrée sur les champs quantité (L x l) ---------- */
+function parseQteExpression(raw){
+  var s=String(raw||'').trim();
+  if(!s) return 0;
+  var m = s.match(/^(-?\d+(?:[.,]\d+)?)\s*[x×*]\s*(-?\d+(?:[.,]\d+)?)(?:\s*[x×*]\s*(-?\d+(?:[.,]\d+)?))?$/i);
+  if(m){
+    var a=parseFloat(m[1].replace(',','.')), b=parseFloat(m[2].replace(',','.'));
+    var c=m[3]?parseFloat(m[3].replace(',','.')):1;
+    var result=a*b*c;
+    return Math.round(result*100)/100;
+  }
+  var plain=parseFloat(s.replace(',','.'));
+  return isNaN(plain)?0:plain;
+}
+
+/* ---------- Saisie vocale (Web Speech API, native au navigateur, gratuite) ---------- */
+var SpeechRecCtor = window.SpeechRecognition || window.webkitSpeechRecognition;
+var micSupported = !!SpeechRecCtor;
+var activeRecognition = null;
+function resetMicBtn(btn){ if(btn){ btn.textContent='🎤'; btn.classList.remove('mic-listening'); } }
+function startVoiceInput(targetId, btn){
+  if(!micSupported) return;
+  if(activeRecognition){ try{ activeRecognition.stop(); }catch(e){} activeRecognition=null; return; }
+  var input=document.getElementById(targetId);
+  if(!input) return;
+  var rec=new SpeechRecCtor();
+  rec.lang='fr-FR'; rec.interimResults=false; rec.maxAlternatives=1;
+  btn.textContent='🔴'; btn.classList.add('mic-listening');
+  rec.onresult=function(e){
+    var transcript=e.results[0][0].transcript;
+    var existing=input.value||'';
+    input.value=(existing?existing+' ':'')+transcript;
+    input.dispatchEvent(new Event('input',{bubbles:true}));
+  };
+  rec.onerror=function(){ resetMicBtn(btn); activeRecognition=null; };
+  rec.onend=function(){ resetMicBtn(btn); activeRecognition=null; };
+  activeRecognition=rec;
+  try{ rec.start(); }catch(e){ resetMicBtn(btn); activeRecognition=null; }
+}
 
 function attachHandlers(){
   document.querySelectorAll('[data-scope="meta"]').forEach(function(el){
@@ -531,10 +630,30 @@ function attachHandlers(){
   document.querySelectorAll('[data-scope="item"]').forEach(function(el){
     el.addEventListener('input',function(){
       var ci=Number(el.dataset.cat), ii=Number(el.dataset.item), path=el.dataset.path, v=el.value;
-      state.categories[ci].items[ii][path]=(path==='qte'||path==='prix')?(v===''?0:Number(v)):v;
-      queueSave();
-      if(path==='qte'||path==='prix'){ render(); }
+      if(path==='qte'){
+        // Pendant la frappe : si c'est un nombre simple, mise à jour en direct.
+        // Si ça ressemble à une expression (3.2x2.4) en cours de frappe, on attend la sortie du champ (blur) pour calculer.
+        if(/^-?\d*[.,]?\d*$/.test(v)){
+          state.categories[ci].items[ii].qte = v===''?0:parseFloat(v.replace(',','.'))||0;
+          queueSave(); render();
+        }
+      } else if(path==='prix'){
+        state.categories[ci].items[ii][path]= v===''?0:Number(v);
+        queueSave(); render();
+      } else {
+        state.categories[ci].items[ii][path]=v;
+        queueSave();
+      }
     });
+    if(el.dataset.path==='qte'){
+      el.addEventListener('blur',function(){
+        var ci=Number(el.dataset.cat), ii=Number(el.dataset.item);
+        var computed = parseQteExpression(el.value);
+        state.categories[ci].items[ii].qte = computed;
+        el.value = computed;
+        queueSave(); render();
+      });
+    }
   });
   document.querySelectorAll('[data-action="add"]').forEach(function(el){
     el.addEventListener('click',function(){
@@ -593,6 +712,7 @@ function attachHandlers(){
       if(s==='entreprise') openEntreprise=!openEntreprise;
       else if(s==='client') openClient=!openClient;
       else if(s==='couts') openCouts=!openCouts;
+      else if(s==='guide') openGuide=!openGuide;
       render();
     });
   });
@@ -990,8 +1110,9 @@ document.getElementById('btnFiche').addEventListener('click',function(){ exportD
 document.getElementById('btnReset').addEventListener('click', resetForm);
 document.addEventListener('click', function(e){
   var t = e.target.closest && e.target.closest('[data-action="printdevis"], [data-action="printfiche"]');
-  if(!t) return;
-  openPrintable(t.dataset.action==='printdevis' ? 'devis' : 'fiche');
+  if(t){ openPrintable(t.dataset.action==='printdevis' ? 'devis' : 'fiche'); return; }
+  var mic = e.target.closest && e.target.closest('.mic-btn');
+  if(mic){ startVoiceInput(mic.dataset.target, mic); return; }
 });
 
 render();
