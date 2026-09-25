@@ -49,6 +49,11 @@ section.card{background:var(--surface-1); border:1px solid var(--line); border-r
 .tarif-table input{width:100%; padding:6px 7px; border:1px solid var(--line-strong); border-radius:6px; background:var(--surface-2); color:var(--ink); font-size:13px;}
 .tarif-table td:last-child{width:28px;}
 code{background:var(--surface-2); padding:1px 5px; border-radius:4px; font-size:11px;}
+.bulk-adjust{margin-top:16px; padding-top:14px; border-top:1px dashed var(--line-strong);}
+.bulk-adjust label{display:block; font-size:12px; color:var(--ink-soft); margin-bottom:4px;}
+.bulk-adjust-row{display:flex; gap:8px;}
+.bulk-adjust-row input{flex:1; padding:9px 10px; border:1px solid var(--line-strong); border-radius:8px; background:var(--surface-2); color:var(--ink); font-size:14px;}
+.bulk-adjust-row button{flex:none; white-space:nowrap;}
 .card-head .idx{font-family:var(--font-head); font-weight:700; font-size:13px; color:var(--accent-ink); background:var(--accent); width:22px;height:22px;border-radius:6px; display:flex;align-items:center;justify-content:center;flex:none;}
 .card-head h2{font-size:16px;}
 .card-body{padding:12px 16px 16px;}
@@ -84,6 +89,7 @@ code{background:var(--surface-2); padding:1px 5px; border-radius:4px; font-size:
 .actions button.primary{background:var(--accent); border-color:var(--accent); color:var(--accent-ink);}
 .actions button:disabled{opacity:0.5;}
 .hint{font-size:11px; color:var(--ink-soft); margin-top:8px; line-height:1.5;}
+.docx-error-hint{position:fixed; left:0; right:0; bottom:64px; z-index:6; background:var(--warn-bg,#F8EEDA); color:var(--warn); font-size:12px; text-align:center; padding:8px 16px; border-top:1px solid var(--line);}
 </style>
 </head>
 <body>
@@ -95,12 +101,12 @@ code{background:var(--surface-2); padding:1px 5px; border-radius:4px; font-size:
   </header>
   <div id="app"></div>
 </div>
+<div id="docxErrorHint" class="docx-error-hint" style="display:none">Impossible de charger la librairie Word (réseau, pare-feu ou bloqueur de publicité). Vérifie ta connexion, ou essaie sans bloqueur/VPN, puis clique "Réessayer".</div>
 <div class="actions">
   <button id="btnFiche" disabled>Chargement…</button>
   <button id="btnDevis" class="primary" disabled>Chargement…</button>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/docx@9.7.1/dist/index.umd.cjs"></script>
 <script>
 (function(){
 "use strict";
@@ -148,15 +154,82 @@ function uid(){ return Math.random().toString(36).slice(2,9); }
 
 var CAT_KEY='devis-carrelage-catalogue-v1', ZONE_KEY='devis-carrelage-zones-v1';
 var defaultCatalogue=[
+  // Matériaux — carrelages & revêtements
   {id:'c1',desc:'Carrelage grès cérame standard',unite:'m²',prix:25},
-  {id:'c2',desc:'Colle à carrelage (sac 25 kg)',unite:'sac',prix:18},
-  {id:'c3',desc:'Joint de carrelage (sac 5 kg)',unite:'sac',prix:12},
-  {id:'c4',desc:"Primaire d'accrochage (5 L)",unite:'L',prix:9},
-  {id:'c5',desc:'Pose carrelage — petit format (≤ 30×30 cm)',unite:'m²',prix:35},
-  {id:'c6',desc:'Pose carrelage — format moyen (30×60 cm)',unite:'m²',prix:30},
-  {id:'c7',desc:'Pose carrelage — grand format (> 60 cm)',unite:'m²',prix:40},
-  {id:'c8',desc:'Ragréage / préparation du support',unite:'m²',prix:12},
-  {id:'c9',desc:'Découpes techniques complexes',unite:'forfait',prix:80}
+  {id:'c2',desc:'Carrelage grès cérame grand format (> 60 cm)',unite:'m²',prix:38},
+  {id:'c3',desc:'Carrelage effet pierre / effet bois',unite:'m²',prix:32},
+  {id:'c4',desc:'Mosaïque',unite:'m²',prix:55},
+  {id:'c5',desc:'Faïence murale',unite:'m²',prix:22},
+  {id:'c6',desc:'Carrelage extérieur antidérapant',unite:'m²',prix:30},
+  {id:'c7',desc:'Carrelage terrasse sur plots',unite:'m²',prix:45},
+  {id:'c8',desc:'Plinthes carrelage assorties',unite:'ml',prix:8},
+  {id:'c9',desc:'Profilés de finition alu',unite:'ml',prix:9},
+  {id:'c10',desc:"Profilés d'angle PVC",unite:'ml',prix:5},
+  {id:'c11',desc:'Seuil de porte carrelage',unite:'u',prix:15},
+  {id:'c12',desc:'Natte de désolidarisation',unite:'m²',prix:14},
+  {id:'c13',desc:"Membrane d'étanchéité sous carrelage (SPEC)",unite:'m²',prix:11},
+  {id:'c14',desc:"Bande d'étanchéité de joint",unite:'ml',prix:6},
+  // Colles, joints, primaires
+  {id:'c15',desc:'Colle à carrelage standard (sac 25 kg)',unite:'sac',prix:18},
+  {id:'c16',desc:'Colle flex / grand format (sac 25 kg)',unite:'sac',prix:24},
+  {id:'c17',desc:'Colle carrelage extérieur / gel (sac 25 kg)',unite:'sac',prix:26},
+  {id:'c18',desc:'Joint de carrelage standard (sac 5 kg)',unite:'sac',prix:12},
+  {id:'c19',desc:'Joint époxy',unite:'kg',prix:14},
+  {id:'c20',desc:"Primaire d'accrochage (5 L)",unite:'L',prix:9},
+  {id:'c21',desc:'Croisillons / entretoises (boîte)',unite:'boîte',prix:4},
+  {id:'c22',desc:'Cales de nivellement (boîte de 100)',unite:'boîte',prix:12},
+  // Préparation du support
+  {id:'c23',desc:'Ragréage autolissant (sac 25 kg)',unite:'sac',prix:16},
+  {id:'c24',desc:'Chape de ragréage épaisse (> 3 cm)',unite:'m²',prix:20},
+  {id:'c25',desc:'Enduit de rebouchage (sac 5 kg)',unite:'sac',prix:8},
+  // Pose et découpe (main d'œuvre)
+  {id:'c26',desc:'Pose carrelage — petit format (≤ 30×30 cm)',unite:'m²',prix:35},
+  {id:'c27',desc:'Pose carrelage — format moyen (30×60 cm)',unite:'m²',prix:30},
+  {id:'c28',desc:'Pose carrelage — grand format (> 60 cm)',unite:'m²',prix:40},
+  {id:'c29',desc:'Pose mosaïque',unite:'m²',prix:55},
+  {id:'c30',desc:'Pose faïence murale',unite:'m²',prix:32},
+  {id:'c31',desc:'Pose carrelage extérieur / terrasse',unite:'m²',prix:38},
+  {id:'c32',desc:'Supplément pose en diagonale',unite:'m²',prix:8},
+  {id:'c33',desc:'Supplément pose à joints alignés',unite:'m²',prix:5},
+  {id:'c34',desc:'Ragréage / préparation du support',unite:'m²',prix:12},
+  {id:'c35',desc:'Découpes techniques complexes',unite:'forfait',prix:80},
+  {id:'c36',desc:'Découpe pour évacuation / prise',unite:'u',prix:10},
+  {id:'c37',desc:'Jointoiement',unite:'m²',prix:6},
+  {id:'c38',desc:'Pose de plinthes',unite:'ml',prix:6},
+  {id:'c39',desc:'Pose de seuils',unite:'u',prix:12},
+  // Travaux annexes — démolition
+  {id:'c40',desc:"Dépose de l'ancien carrelage",unite:'m²',prix:15},
+  {id:'c41',desc:'Dépose de l\'ancienne chape',unite:'m²',prix:18},
+  // Travaux annexes — gyproc / cloisons
+  {id:'c42',desc:'Plaque de gyproc standard 13 mm',unite:'m²',prix:7},
+  {id:'c43',desc:'Plaque de gyproc hydrofuge',unite:'m²',prix:9},
+  {id:'c44',desc:'Plaque de gyproc phonique',unite:'m²',prix:11},
+  {id:'c45',desc:'Ossature métallique cloison',unite:'ml',prix:6},
+  {id:'c46',desc:'Isolation laine de verre',unite:'m²',prix:5},
+  {id:'c47',desc:'Isolation laine de roche',unite:'m²',prix:6},
+  {id:'c48',desc:'Enduit de jointoiement gyproc',unite:'kg',prix:3},
+  {id:'c49',desc:'Bande à joint gyproc',unite:'ml',prix:1},
+  {id:'c50',desc:'Pose de cloison gyproc complète',unite:'m²',prix:28},
+  {id:'c51',desc:'Pose de doublage gyproc sur mur',unite:'m²',prix:22},
+  // Travaux annexes — peinture
+  {id:'c52',desc:'Peinture sous-couche',unite:'m²',prix:4},
+  {id:'c53',desc:'Peinture de finition mate',unite:'m²',prix:6},
+  {id:'c54',desc:'Peinture de finition satinée',unite:'m²',prix:7},
+  {id:'c55',desc:'Enduit de lissage mur',unite:'m²',prix:5},
+  {id:'c56',desc:'Pose peinture (main d\'œuvre)',unite:'m²',prix:8},
+  // Plomberie de base (utile en rénovation salle de bain)
+  {id:'c57',desc:"Déplacement d'une évacuation sanitaire",unite:'u',prix:45},
+  {id:'c58',desc:'Raccord robinetterie',unite:'u',prix:35},
+  {id:'c59',desc:'Pose siphon de sol',unite:'u',prix:40},
+  // Électricité de base
+  {id:'c60',desc:"Déplacement d'un point électrique",unite:'u',prix:55},
+  {id:'c61',desc:'Pose spot encastré',unite:'u',prix:25},
+  // Logistique
+  {id:'c62',desc:'Déplacement / trajet',unite:'forfait',prix:40},
+  {id:'c63',desc:'Évacuation des gravats',unite:'forfait',prix:60},
+  {id:'c64',desc:'Location de matériel spécifique',unite:'forfait',prix:50},
+  {id:'c65',desc:'Protection du chantier (bâchage)',unite:'forfait',prix:30},
+  {id:'c66',desc:'Nettoyage de fin de chantier',unite:'forfait',prix:50}
 ];
 var defaultZones=[
   {id:'z1',nom:'Zone 1 — proche (< 20 km)',majorationPct:0,forfaitTrajet:40},
@@ -366,6 +439,7 @@ function settingsSectionHtml(){
     });
     html+='</tbody></table>';
     html+='<button class="btn-add" data-action="addcatalog">+ Ajouter une ligne au catalogue</button>';
+    html+='<div class="bulk-adjust"><label for="bulkPct">Majorer/réduire tout le catalogue de (%)</label><div class="bulk-adjust-row"><input type="number" step="0.1" id="bulkPct" placeholder="ex. 2.4 ou -1.5"><button class="btn-add" type="button" data-action="applybulk">Appliquer</button></div><p class="hint" style="margin:4px 0 0">Utile pour répercuter en une fois la variation semestrielle de l\'indice ABEX "Marchandises" (voir assuralia.be) sur l\'ensemble de tes prix.</p></div>';
 
     html+='<h3 class="subhead">Zones tarifaires</h3>';
     html+='<p class="hint" style="margin-top:0">La majoration s\'applique au sous-total de la catégorie "Pose et découpe". Le forfait trajet pré-remplit automatiquement le 1er poste de "Logistique" quand tu choisis une zone.</p>';
@@ -550,6 +624,18 @@ function attachHandlers(){
     addCatalogBtn.addEventListener('click',function(){
       catalogue.push({id:uid(),desc:'',unite:'',prix:0});
       saveJSON(CAT_KEY,catalogue); render();
+    });
+  }
+  var applyBulkBtn=document.querySelector('[data-action="applybulk"]');
+  if(applyBulkBtn){
+    applyBulkBtn.addEventListener('click',function(){
+      var input=document.getElementById('bulkPct');
+      var pct=Number(input.value);
+      if(!pct){ input.focus(); return; }
+      if(!confirm('Appliquer '+(pct>0?'+':'')+pct+'% à tous les prix du catalogue ('+catalogue.length+' lignes) ?')) return;
+      catalogue.forEach(function(c){ c.prix = Math.round(c.prix*(1+pct/100)*100)/100; });
+      saveJSON(CAT_KEY,catalogue);
+      render();
     });
   }
   var exportCatBtn=document.querySelector('[data-action="exportcat"]');
@@ -753,7 +839,9 @@ async function buildFicheBlob(){
   return await d.Packer.toBlob(doc);
 }
 
+var docxReady = false;
 async function exportDoc(kind,btn){
+  if(!docxReady){ return; }
   var oldText=btn.textContent;
   btn.disabled=true; btn.textContent='Génération...';
   try{
@@ -774,18 +862,49 @@ document.getElementById('btnReset').addEventListener('click', resetForm);
 
 render();
 
-// Active les boutons d'export seulement une fois la librairie Word chargée,
-// pour éviter le message "n'a pas fini de charger" au premier clic.
-(function waitForDocx(){
-  if(window.docx){
-    document.getElementById('btnDevis').disabled=false;
-    document.getElementById('btnDevis').textContent='Devis client (.docx)';
-    document.getElementById('btnFiche').disabled=false;
-    document.getElementById('btnFiche').textContent='Fiche technique (.docx)';
-  } else {
-    setTimeout(waitForDocx, 200);
+// Charge la librairie Word depuis une source, puis une autre en secours si la
+// première échoue (réseau bloqué, extension navigateur...). Affiche un vrai
+// message d'erreur avec un bouton "Réessayer" plutôt que d'attendre indéfiniment.
+var DOCX_SOURCES=[
+  'https://cdn.jsdelivr.net/npm/docx@9.7.1/dist/index.umd.cjs',
+  'https://unpkg.com/docx@9.7.1/dist/index.umd.cjs'
+];
+function setExportButtonsState(state){
+  var b1=document.getElementById('btnDevis'), b2=document.getElementById('btnFiche');
+  var hint=document.getElementById('docxErrorHint');
+  hint.style.display = (state==='error') ? 'block' : 'none';
+  [b1,b2].forEach(function(b){
+    if(state==='ready'){ b.disabled=false; b.onclick=null; }
+    else if(state==='loading'){ b.disabled=true; b.textContent='Chargement…'; }
+    else if(state==='error'){ b.disabled=false; b.textContent='Erreur — Réessayer'; }
+  });
+  if(state==='ready'){ b1.textContent='Devis client (.docx)'; b2.textContent='Fiche technique (.docx)'; docxReady=true; }
+  else { docxReady=false; }
+}
+function loadDocxLibrary(sourceIndex){
+  sourceIndex = sourceIndex||0;
+  if(sourceIndex>=DOCX_SOURCES.length){
+    setExportButtonsState('error');
+    document.getElementById('btnDevis').onclick=function(){ setExportButtonsState('loading'); loadDocxLibrary(0); };
+    document.getElementById('btnFiche').onclick=function(){ setExportButtonsState('loading'); loadDocxLibrary(0); };
+    return;
   }
-})();
+  var script=document.createElement('script');
+  script.src=DOCX_SOURCES[sourceIndex];
+  var timeout=setTimeout(function(){ script.onerror(); }, 8000);
+  script.onload=function(){
+    clearTimeout(timeout);
+    if(window.docx){ setExportButtonsState('ready'); }
+    else { loadDocxLibrary(sourceIndex+1); }
+  };
+  script.onerror=function(){
+    clearTimeout(timeout);
+    loadDocxLibrary(sourceIndex+1);
+  };
+  document.body.appendChild(script);
+}
+setExportButtonsState('loading');
+loadDocxLibrary(0);
 })();
 </script>
 </body>
